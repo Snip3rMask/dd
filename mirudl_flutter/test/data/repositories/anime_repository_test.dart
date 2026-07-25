@@ -9,7 +9,7 @@ import 'package:mirudl_flutter/core/errors/failures.dart';
 
 // Manual mock for AniDbApi
 class MockAniDbApi extends AniDbApi {
-  MockAniDbApi() : super(null!); // We override all methods
+  MockAniDbApi() ; // We override all methods
 
   @override
   Future<List<AnimeItem>> search(String query) async {

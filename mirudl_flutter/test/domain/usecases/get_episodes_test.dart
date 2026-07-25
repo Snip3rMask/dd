@@ -4,7 +4,7 @@ import 'package:mirudl_flutter/data/repositories/anime_repository.dart';
 import 'package:mirudl_flutter/data/models/episode_item.dart';
 
 class MockRepo extends AnimeRepository {
-  MockRepo() : super(null!);
+  MockRepo() ;
 
   @override
   Future<List<EpisodeItem>> getEpisodes(String animeId) async {

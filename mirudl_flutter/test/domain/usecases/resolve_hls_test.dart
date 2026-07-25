@@ -1,9 +1,9 @@
+import 'package:mirudl_flutter/data/repositories/anime_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mirudl_flutter/domain/usecases/resolve_hls.dart';
-import 'package:mirudl_flutter/data/repositories/anime_repository.dart';
 
 class MockRepo extends AnimeRepository {
-  MockRepo() : super(null!);
+  MockRepo() ;
 
   @override
   Future<String?> resolveHlsFromEmbed(String embedUrl) async {

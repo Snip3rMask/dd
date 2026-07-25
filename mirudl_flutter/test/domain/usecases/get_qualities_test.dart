@@ -1,10 +1,10 @@
+import 'package:mirudl_flutter/data/repositories/anime_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mirudl_flutter/domain/usecases/get_qualities.dart';
-import 'package:mirudl_flutter/data/repositories/anime_repository.dart';
 import 'package:mirudl_flutter/data/models/video_source.dart';
 
 class MockRepo extends AnimeRepository {
-  MockRepo() : super(null!);
+  MockRepo() ;
 
   @override
   Future<List<VideoSource>> getQualities(String masterUrl) async {

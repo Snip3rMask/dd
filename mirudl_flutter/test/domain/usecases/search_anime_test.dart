@@ -1,13 +1,12 @@
+import 'package:mirudl_flutter/data/repositories/anime_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mirudl_flutter/domain/usecases/search_anime.dart';
 import 'package:mirudl_flutter/data/repositories/anime_repository.dart';
-import 'package:mirudl_flutter/data/datasources/remote/anidb_api.dart';
 import 'package:mirudl_flutter/data/models/anime_item.dart';
-import 'package:mirudl_flutter/core/errors/exceptions.dart';
 import 'package:mirudl_flutter/core/errors/failures.dart';
 
 class MockRepo extends AnimeRepository {
-  MockRepo() : super(null!);
+  MockRepo() ;
 
   @override
   Future<List<AnimeItem>> searchAnime(String query) async {
