@@ -10,7 +10,7 @@ class ApiClient {
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,
         connectTimeout: ApiConstants.connectTimeout,
-        readTimeout: ApiConstants.readTimeout,
+        receiveTimeout: ApiConstants.readTimeout,
         followRedirects: true,
         maxRedirects: 5,
         headers: {

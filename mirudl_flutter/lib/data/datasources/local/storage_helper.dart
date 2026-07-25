@@ -4,7 +4,6 @@ import '../../../core/constants/app_constants.dart';
 
 /// SharedPreferences wrapper (mirrors StorageSettings.java)
 class StorageHelper {
-  static const String _prefKey = 'mirudl_settings';
   static const String _keyDownloadUri = 'download_uri';
   static const String _keyParallel = 'parallel_segments';
   static const String _keyQuality = 'preferred_quality';

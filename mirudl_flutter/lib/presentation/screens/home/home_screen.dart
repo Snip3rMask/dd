@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/search_provider.dart';
-import '../../theme/app_colors.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/loading_indicator.dart';
 import '../../widgets/empty_state.dart';
@@ -21,19 +20,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentTab = 0;
-  final TextEditingController _searchController = TextEditingController();
 
   final List<Widget> _screens = const [
     _HomeTab(),
     DownloadsScreen(),
     SettingsScreen(),
   ];
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +50,14 @@ class _HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<_HomeTab> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -111,7 +111,6 @@ class _HomeTabState extends State<_HomeTab> {
 
                 return LayoutBuilder(
                   builder: (context, constraints) {
-                    // Determine grid columns based on width
                     final crossAxisCount = constraints.maxWidth > 600
                         ? (constraints.maxWidth / 180).floor()
                         : 2;

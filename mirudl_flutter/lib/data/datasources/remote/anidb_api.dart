@@ -12,7 +12,7 @@ import '../../models/video_source.dart';
 /// Mirrors the functionality from AniDbApi.java
 class AniDbApi {
   final ApiClient _client;
-  final Dio get dio => _client.dio;
+  Dio get dio => _client.dio;
 
   AniDbApi(this._client);
 

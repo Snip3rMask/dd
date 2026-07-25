@@ -6,7 +6,6 @@ import '../../models/download_entry.dart';
 
 /// Persistence for completed downloads (mirrors DownloadEntryStore.java)
 class DownloadStore {
-  static const String _prefKey = 'mirudl_downloads';
   static const String _keyEntries = 'entries';
 
   SharedPreferences? _prefs;

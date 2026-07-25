@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../../data/repositories/download_repository.dart' as repo;
+import '../../../../data/repositories/download_repository.dart';
+import '../../../../domain/enums/download_status.dart';
 import '../../../theme/app_colors.dart';
 
 class ActiveDownloadTile extends StatelessWidget {
-  final repo.DownloadJob job;
+  final DownloadJob job;
   final VoidCallback onCancel;
 
   const ActiveDownloadTile({
@@ -68,13 +69,13 @@ class ActiveDownloadTile extends StatelessWidget {
     );
   }
 
-  Color _statusColor(repo.DownloadStatus status) {
+  Color _statusColor(DownloadStatus status) {
     switch (status) {
-      case repo.DownloadStatus.downloading:
+      case DownloadStatus.downloading:
         return AppColors.primary;
-      case repo.DownloadStatus.failed:
+      case DownloadStatus.failed:
         return AppColors.error;
-      case repo.DownloadStatus.cancelled:
+      case DownloadStatus.cancelled:
         return AppColors.warning;
       default:
         return AppColors.textTertiary;
