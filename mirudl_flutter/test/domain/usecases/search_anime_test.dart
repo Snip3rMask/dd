@@ -1,12 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mirudl_flutter/domain/usecases/search_anime.dart';
+import 'package:mirudl_flutter/core/network/api_client.dart';
 import 'package:mirudl_flutter/data/repositories/anime_repository.dart';
 import 'package:mirudl_flutter/data/datasources/remote/anidb_api.dart';
 import 'package:mirudl_flutter/data/models/anime_item.dart';
 import 'package:mirudl_flutter/core/errors/failures.dart';
 
 class _MockApi extends AniDbApi {
-  _MockApi() : super(null!);
+  _MockApi() : super(ApiClient());
   @override
   Future<List<AnimeItem>> search(String query) async {
     if (query == 'naruto') return [AnimeItem(id: '1', title: 'Naruto')];

@@ -1,11 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mirudl_flutter/domain/usecases/get_episodes.dart';
+import 'package:mirudl_flutter/core/network/api_client.dart';
 import 'package:mirudl_flutter/data/repositories/anime_repository.dart';
 import 'package:mirudl_flutter/data/datasources/remote/anidb_api.dart';
 import 'package:mirudl_flutter/data/models/episode_item.dart';
 
 class _MockApi extends AniDbApi {
-  _MockApi() : super(null!);
+  _MockApi() : super(ApiClient());
   @override
   Future<List<EpisodeItem>> getEpisodes(String animeId) async {
     if (animeId == '42') return [EpisodeItem(id: 1, number: 1, title: 'Ep1'), EpisodeItem(id: 2, number: 2, title: 'Ep2')];

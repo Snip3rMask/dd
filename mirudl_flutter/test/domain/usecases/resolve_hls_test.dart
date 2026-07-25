@@ -1,11 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mirudl_flutter/domain/usecases/resolve_hls.dart';
 import 'package:mirudl_flutter/data/repositories/anime_repository.dart';
+import 'package:mirudl_flutter/core/network/api_client.dart';
 import 'package:mirudl_flutter/data/datasources/remote/anidb_api.dart';
 
 /// Mock that doesn't need real ApiClient
 class _MockApi extends AniDbApi {
-  _MockApi() : super(null!); // Bypass constructor
+  _MockApi() : super(ApiClient()); // Bypass constructor
 
   @override
   Future<String?> resolveHlsFromEmbed(String embedUrl) async {

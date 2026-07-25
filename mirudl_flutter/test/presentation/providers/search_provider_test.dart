@@ -4,7 +4,7 @@ import 'package:mirudl_flutter/domain/usecases/search_anime.dart';
 import 'package:mirudl_flutter/data/models/anime_item.dart';
 
 class MockUseCase extends SearchAnime {
-  MockUseCase() : super(null!); // Bypass constructor, override call()
+  MockUseCase() : super(AnimeRepository(AniDbApi(ApiClient()))); // Bypass constructor, override call()
 
   @override
   Future<List<AnimeItem>> call(String query) async {
