@@ -14,8 +14,8 @@ set(RUNNER_SOURCES
   "runner/win32_window.cpp"
 )
 
-add_executable(${BINARY_NAME} ${RUNNER_SOURCES})
-target_link_libraries(${BINARY_NAME} PRIVATE flutter_managed flutter_wrapper_app)
+add_executable(${BINARY_NAME} WIN32 ${RUNNER_SOURCES})
+target_link_libraries(${BINARY_NAME} PRIVATE flutter_managed)
 target_include_directories(${BINARY_NAME} PRIVATE "${FLUTTER_MANAGED_DIR}")
 
 install(TARGETS ${BINARY_NAME} RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")

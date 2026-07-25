@@ -1,5 +1,4 @@
 #include "win32_window.h"
-#include <flutter/flutter_view.h>
 
 Win32Window::Win32Window() : hwnd_(nullptr), controller_(nullptr) {}
 Win32Window::~Win32Window() {}
