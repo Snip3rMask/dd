@@ -1,11 +1,11 @@
-import 'package:mirudl_flutter/core/network/api_client.dart';
-import 'package:mirudl_flutter/data/datasources/remote/anidb_api.dart';
-import 'package:mirudl_flutter/data/repositories/anime_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mirudl_flutter/domain/usecases/resolve_hls.dart';
+import 'package:mirudl_flutter/data/repositories/anime_repository.dart';
+import 'package:mirudl_flutter/data/datasources/remote/anidb_api.dart';
 
-class MockRepo extends AnimeRepository {
-  MockRepo() : super(AniDbApi(ApiClient()));
+/// Mock that doesn't need real ApiClient
+class _MockApi extends AniDbApi {
+  _MockApi() : super(null!); // Bypass constructor
 
   @override
   Future<String?> resolveHlsFromEmbed(String embedUrl) async {
@@ -14,6 +14,10 @@ class MockRepo extends AnimeRepository {
     }
     return null;
   }
+}
+
+class MockRepo extends AnimeRepository {
+  MockRepo() : super(_MockApi());
 }
 
 void main() {

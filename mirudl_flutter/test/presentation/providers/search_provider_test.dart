@@ -1,18 +1,18 @@
-import 'package:mirudl_flutter/core/network/api_client.dart';
-import 'package:mirudl_flutter/data/datasources/remote/anidb_api.dart';
-import 'package:mirudl_flutter/data/repositories/anime_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mirudl_flutter/presentation/providers/search_provider.dart';
 import 'package:mirudl_flutter/domain/usecases/search_anime.dart';
 import 'package:mirudl_flutter/data/models/anime_item.dart';
 
 class MockUseCase extends SearchAnime {
-  MockUseCase() : super(AnimeRepository(AniDbApi(ApiClient())));
+  MockUseCase() : super(null!); // Bypass constructor, override call()
 
   @override
   Future<List<AnimeItem>> call(String query) async {
     if (query == 'naruto') {
-      return [AnimeItem(id: '1', title: 'Naruto'), AnimeItem(id: '2', title: 'Naruto Shippuden')];
+      return [
+        AnimeItem(id: '1', title: 'Naruto'),
+        AnimeItem(id: '2', title: 'Naruto Shippuden'),
+      ];
     }
     if (query == 'error') {
       throw Exception('Network error');
@@ -37,7 +37,6 @@ void main() {
 
   test('search returns results', () async {
     await provider.search('naruto');
-
     expect(provider.isLoading, false);
     expect(provider.results, hasLength(2));
     expect(provider.query, 'naruto');
@@ -47,7 +46,6 @@ void main() {
   test('search with empty query clears results', () async {
     await provider.search('naruto');
     expect(provider.results, isNotEmpty);
-
     await provider.search('');
     expect(provider.results, isEmpty);
     expect(provider.query, '');
@@ -55,7 +53,6 @@ void main() {
 
   test('search handles errors gracefully', () async {
     await provider.search('error');
-
     expect(provider.isLoading, false);
     expect(provider.results, isEmpty);
     expect(provider.error, isNotNull);
@@ -64,7 +61,6 @@ void main() {
   test('clear resets state', () async {
     await provider.search('naruto');
     expect(provider.results, isNotEmpty);
-
     provider.clear();
     expect(provider.results, isEmpty);
     expect(provider.query, '');
