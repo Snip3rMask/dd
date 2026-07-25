@@ -1,0 +1,60 @@
+name: Flutter Test
+
+on:
+  push:
+    paths:
+      - 'mirudl_flutter/**'
+    branches: [ main, master ]
+  pull_request:
+    paths:
+      - 'mirudl_flutter/**'
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mirudl_flutter
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.x'
+          channel: 'stable'
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            mirudl_flutter/.dart_tool
+            mirudl_flutter/.packages
+            mirudl_flutter/.pub-cache
+          key: flutter-pub-${{ hashFiles('mirudl_flutter/pubspec.yaml') }}
+          restore-keys: |
+            flutter-pub-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze code
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test --coverage
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: mirudl_flutter/coverage/
