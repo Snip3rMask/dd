@@ -29,4 +29,9 @@ class SettingsRepository {
   String getPreferredLanguage() => _storage.getPreferredLanguage();
   Future<void> setPreferredLanguage(String language) =>
       _storage.setPreferredLanguage(language);
+
+  // --- Dark Mode ---
+
+  bool getDarkMode() => _storage.getDarkMode();
+  Future<void> setDarkMode(bool value) => _storage.setDarkMode(value);
 }

@@ -25,11 +25,17 @@ class MiruDlApp extends StatelessWidget {
           create: (_) => sl<SettingsProvider>(),
         ),
       ],
-      child: MaterialApp(
-        title: 'MiruDL',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.darkTheme,
-        home: const HomeScreen(),
+      child: Consumer<SettingsProvider>(
+        builder: (context, settings, _) {
+          return MaterialApp(
+            title: 'dd',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.darkTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: settings.darkMode ? ThemeMode.dark : ThemeMode.light,
+            home: const HomeScreen(),
+          );
+        },
       ),
     );
   }

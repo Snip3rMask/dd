@@ -1,0 +1,87 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.x'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze code
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+
+      - name: Build APK
+        run: flutter build apk --release --split-per-abi
+
+      - name: Collect APKs
+        run: |
+          mkdir -p artifacts
+          for f in build/app/outputs/flutter-apk/*.apk; do
+            base=$(basename "$f")
+            newname="dd-${base}"
+            cp "$f" "artifacts/${newname}"
+          done
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: dd-APKs
+          path: artifacts/*.apk
+
+  release:
+    needs: [build]
+    runs-on: ubuntu-latest
+    if: >
+      always() &&
+      (startsWith(github.ref, 'refs/tags/v') ||
+       github.event_name == 'push' && github.ref == 'refs/heads/main' ||
+       github.event_name == 'workflow_dispatch')
+    steps:
+      - name: Download APKs
+        uses: actions/download-artifact@v4
+        with:
+          name: dd-APKs
+          path: artifacts
+
+      - name: Generate release name
+        id: name
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "tag_name=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+            echo "release_name=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          else
+            echo "tag_name=build-$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
+            echo "release_name=Build $(date +%Y-%m-%d) $(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.name.outputs.tag_name }}
+          name: ${{ steps.name.outputs.release_name }}
+          body: "dd Flutter build from commit ${{ github.sha }}"
+          prerelease: ${{ steps.name.outputs.prerelease }}
+          draft: false
+          generate_release_notes: true
+          overwrite_files: true
+          files: artifacts/*.apk

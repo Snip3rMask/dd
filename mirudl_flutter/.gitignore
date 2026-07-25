@@ -20,9 +20,4 @@ build/
 coverage/
 *.log
 *.lock
-android/
-ios/
-windows/
-linux/
-web/
 

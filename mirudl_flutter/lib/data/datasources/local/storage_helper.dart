@@ -8,6 +8,7 @@ class StorageHelper {
   static const String _keyParallel = 'parallel_segments';
   static const String _keyQuality = 'preferred_quality';
   static const String _keyLanguage = 'preferred_language';
+  static const String _keyDarkMode = 'dark_mode';
 
   SharedPreferences? _prefs;
 
@@ -65,5 +66,15 @@ class StorageHelper {
 
   Future<void> setPreferredLanguage(String language) async {
     await _p.setString(_keyLanguage, language);
+  }
+
+  // --- Dark Mode ---
+
+  bool getDarkMode() {
+    return _p.getBool(_keyDarkMode) ?? true;
+  }
+
+  Future<void> setDarkMode(bool value) async {
+    await _p.setBool(_keyDarkMode, value);
   }
 }

@@ -8,6 +8,7 @@ class MockHelper extends StorageHelper {
   int _parallel = 16;
   String _quality = '1080p';
   String _language = 'jpn';
+  bool _darkMode = true;
 
   @override
   String? getDownloadUri() => _uri;
@@ -27,6 +28,10 @@ class MockHelper extends StorageHelper {
   Future<void> setPreferredLanguage(String language) async => _language = language;
   @override
   bool hasDownloadUri() => _uri != null;
+  @override
+  bool getDarkMode() => _darkMode;
+  @override
+  Future<void> setDarkMode(bool value) async => _darkMode = value;
 }
 
 void main() {
@@ -43,6 +48,7 @@ void main() {
     expect(provider.language, 'jpn');
     expect(provider.hasFolder, false);
     expect(provider.languageLabel, 'Sub (Japanese)');
+    expect(provider.darkMode, true);
   });
 
   test('setFolderPath updates value', () async {
@@ -65,5 +71,13 @@ void main() {
     await provider.setLanguage('eng');
     expect(provider.language, 'eng');
     expect(provider.languageLabel, 'Dub (English)');
+  });
+
+  test('toggleTheme switches dark mode', () async {
+    expect(provider.darkMode, true);
+    await provider.toggleTheme();
+    expect(provider.darkMode, false);
+    await provider.toggleTheme();
+    expect(provider.darkMode, true);
   });
 }

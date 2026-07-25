@@ -10,11 +10,13 @@ class SettingsProvider extends ChangeNotifier {
   int _parallel;
   String _quality;
   String _language;
+  bool _darkMode;
 
   SettingsProvider(this._repository)
       : _parallel = 16,
         _quality = '1080p',
-        _language = 'jpn' {
+        _language = 'jpn',
+        _darkMode = true {
     loadSettings();
   }
 
@@ -22,6 +24,7 @@ class SettingsProvider extends ChangeNotifier {
   int get parallel => _parallel;
   String get quality => _quality;
   String get language => _language;
+  bool get darkMode => _darkMode;
   bool get hasFolder => _folderPath != null;
 
   String get languageLabel {
@@ -39,6 +42,7 @@ class SettingsProvider extends ChangeNotifier {
     _parallel = _repository.getParallelSegments();
     _quality = _repository.getPreferredQuality();
     _language = _repository.getPreferredLanguage();
+    _darkMode = _repository.getDarkMode();
     notifyListeners();
   }
 
@@ -67,6 +71,13 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> setLanguage(String value) async {
     _language = value;
     await _repository.setPreferredLanguage(value);
+    notifyListeners();
+  }
+
+  /// Toggle dark/light theme
+  Future<void> toggleTheme() async {
+    _darkMode = !_darkMode;
+    await _repository.setDarkMode(_darkMode);
     notifyListeners();
   }
 }

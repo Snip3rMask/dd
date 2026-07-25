@@ -112,4 +112,68 @@ class AppTheme {
       ),
     );
   }
+
+  static ThemeData get lightTheme {
+    return ThemeData(
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: const Color(0xFFF5F5F5),
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFF1F6FEB),
+        secondary: Color(0xFF2EA043),
+        surface: Colors.white,
+        error: Color(0xFFDA3633),
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onSurface: Color(0xFF1F2328),
+        onError: Colors.white,
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.white,
+        foregroundColor: Color(0xFF1F2328),
+        elevation: 0,
+      ),
+      cardTheme: CardTheme(
+        color: Colors.white,
+        elevation: 1,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Color(0xFFD0D7DE)),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: const Color(0xFFF6F8FA),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFFD0D7DE)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFFD0D7DE)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFF1F6FEB), width: 2),
+        ),
+      ),
+      textTheme: const TextTheme(
+        headlineLarge: TextStyle(
+          color: Color(0xFF1F2328),
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+        ),
+        bodyMedium: TextStyle(
+          color: Color(0xFF656D76),
+          fontSize: 14,
+        ),
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: Colors.white,
+        selectedItemColor: Color(0xFF1F6FEB),
+        unselectedItemColor: Color(0xFF656D76),
+        type: BottomNavigationBarType.fixed,
+        elevation: 0,
+      ),
+    );
+  }
 }

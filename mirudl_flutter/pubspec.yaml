@@ -1,5 +1,5 @@
 name: mirudl_flutter
-description: Cross-platform HLS downloader for anidb.app
+description: dd - HLS Downloader
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -45,8 +45,6 @@ dependencies:
   # Permissions
   permission_handler: ^11.1.0
 
-  # HLS / FFmpeg (for ts → mp4 merge)
-  ffmpeg_kit_flutter_full_gpl: ^6.0.3
 
 dev_dependencies:
   flutter_test:
