@@ -10,7 +10,6 @@
         <item name="android:navigationBarColor">@color/background</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="windowActionModeOverlay">true</item>
-        <item name="android:datePickerDialogTheme">@style/ThemeOverlay.MaterialComponents.Dark.Dialog</item>
         <item name="spinnerStyle">@style/Widget.MiruDL.Spinner</item>
         <item name="android:fontFamily">sans-serif</item>
     </style>
@@ -27,7 +26,7 @@
         <item name="android:background">@drawable/bg_input</item>
     </style>
 
-    <style name="TextAppearance.MiruDL.SectionHeader">
+    <style name="TextAppearance.MiruDL.SectionHeader" parent="@android:style/TextAppearance">
         <item name="android:textColor">@color/text_tertiary</item>
         <item name="android:textSize">12sp</item>
         <item name="android:textStyle">bold</item>
