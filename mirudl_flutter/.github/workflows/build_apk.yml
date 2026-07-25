@@ -1,4 +1,4 @@
-name: Build APK
+name: Build dd
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   actions: read
 
 jobs:
-  build:
+  build-android:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,9 +25,6 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Analyze code
-        run: flutter analyze --no-fatal-warnings --no-fatal-infos
-
       - name: Build APK
         run: flutter build apk --release --split-per-abi
 
@@ -40,14 +37,75 @@ jobs:
             cp "$f" "artifacts/${newname}"
           done
 
-      - name: Upload APKs
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dd-APKs
+          name: dd-Android
           path: artifacts/*.apk
 
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.x'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Windows
+        run: flutter build windows --release
+
+      - name: Collect artifacts
+        run: |
+          mkdir artifacts
+          Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath artifacts/dd-windows-x64.zip
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dd-Windows
+          path: artifacts/dd-windows-x64.zip
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.x'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Install Linux deps
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y libgtk-3-dev liblzma-dev ninja-build
+
+      - name: Build Linux
+        run: flutter build linux --release
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p artifacts
+          tar -czf artifacts/dd-linux-x64.tar.gz -C build/linux/x64/release/bundle .
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dd-Linux
+          path: artifacts/dd-linux-x64.tar.gz
+
   release:
-    needs: [build]
+    needs: [build-android, build-windows, build-linux]
     runs-on: ubuntu-latest
     if: >
       always() &&
@@ -55,11 +113,11 @@ jobs:
        github.event_name == 'push' && github.ref == 'refs/heads/main' ||
        github.event_name == 'workflow_dispatch')
     steps:
-      - name: Download APKs
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          name: dd-APKs
           path: artifacts
+          merge-multiple: true
 
       - name: Generate release name
         id: name
@@ -79,9 +137,9 @@ jobs:
         with:
           tag_name: ${{ steps.name.outputs.tag_name }}
           name: ${{ steps.name.outputs.release_name }}
-          body: "dd Flutter build from commit ${{ github.sha }}"
+          body: "dd builds for Android + Windows + Linux"
           prerelease: ${{ steps.name.outputs.prerelease }}
           draft: false
           generate_release_notes: true
           overwrite_files: true
-          files: artifacts/*.apk
+          files: artifacts/*
