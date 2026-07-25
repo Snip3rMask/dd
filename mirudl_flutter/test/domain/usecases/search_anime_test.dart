@@ -1,4 +1,3 @@
-import 'package:mirudl_flutter/data/repositories/anime_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mirudl_flutter/domain/usecases/search_anime.dart';
 import 'package:mirudl_flutter/data/repositories/anime_repository.dart';

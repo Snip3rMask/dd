@@ -168,11 +168,8 @@ class HlsDownloaderService {
     CancelCheck? cancelCheck,
   ) async {
     final total = urls.length;
-    final completed = _SynchronizedInt(0);
+    int _completed = 0;
     final errors = <int>[];
-    final errorLock = _SynchronizedInt(0);
-    final completer = Completer<void>();
-    final receivePort = ReceivePort();
     int started = 0;
     int finished = 0;
     bool failed = false;
