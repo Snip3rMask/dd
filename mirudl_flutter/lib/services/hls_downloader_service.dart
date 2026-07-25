@@ -7,18 +7,18 @@ import '../core/constants/api_constants.dart';
 import '../core/utils/helpers.dart';
 import '../core/errors/exceptions.dart';
 
+/// Progress callback: (percent, downloadedSegments, totalSegments)
+typedef ProgressCallback = void Function(int percent, int downloaded, int total);
+
+/// Cancel check callback
+typedef CancelCheck = bool Function();
+
 /// HLS download and merge service
 /// Mirrors HlsDownloader.java with full parallelism and FFmpeg merge
 class HlsDownloaderService {
   static const int _maxParallel = 32;
   static const String _userAgent = ApiConstants.userAgent;
   static const String _referer = '${ApiConstants.baseUrl}/';
-
-  /// Progress callback
-  typedef ProgressCallback = void Function(int percent, int downloaded, int total);
-
-  /// Cancel check callback
-  typedef CancelCheck = bool Function();
 
   // ─── Public API ─────────────────────────────────────────────────
 
@@ -102,7 +102,6 @@ class HlsDownloaderService {
 
       return outputPath;
     } finally {
-      // Cleanup temp directory
       if (await tempDir.exists()) {
         await tempDir.delete(recursive: true);
       }
@@ -111,7 +110,6 @@ class HlsDownloaderService {
 
   // ─── Playlist Parsing ───────────────────────────────────────────
 
-  /// Parse master playlist to extract variant stream URLs
   List<VideoVariant> _parseMasterPlaylist(String content, String baseUrl) {
     final variants = <VideoVariant>[];
     final lines = content.split('\n');
@@ -124,17 +122,15 @@ class HlsDownloaderService {
       } else if (pendingInf != null &&
           trimmed.isNotEmpty &&
           !trimmed.startsWith('#')) {
-        final quality = Helpers.extractResolution(pendingInf);
+        final quality = _extractRes(pendingInf);
         final url = Helpers.resolveUrl(trimmed, baseUrl);
         variants.add(VideoVariant(quality, url));
         pendingInf = null;
       }
     }
-
     return variants;
   }
 
-  /// Parse media playlist to extract segment URLs
   List<String> _parseSegments(String content, String baseUrl) {
     final segments = <String>[];
     for (final line in content.split('\n')) {
@@ -148,7 +144,6 @@ class HlsDownloaderService {
     return segments;
   }
 
-  /// Parse init segment (EXT-X-MAP) for fMP4 streams
   String? _parseInitSegment(String content, String baseUrl) {
     final match = RegExp(r'#EXT-X-MAP:URI="([^"]+)"').firstMatch(content);
     if (match != null) {
@@ -159,7 +154,6 @@ class HlsDownloaderService {
 
   // ─── Download Logic ─────────────────────────────────────────────
 
-  /// Download segments in parallel using isolates
   Future<void> _downloadSegmentsInParallel(
     List<String> urls,
     Directory tempDir,
@@ -168,13 +162,10 @@ class HlsDownloaderService {
     CancelCheck? cancelCheck,
   ) async {
     final total = urls.length;
-    int _completed = 0;
-    final errors = <int>[];
-    int started = 0;
     int finished = 0;
     bool failed = false;
+    int started = 0;
 
-    // Process segments in batches
     while (started < total && !failed) {
       if (cancelCheck != null && cancelCheck()) {
         throw CancellationException('Download cancelled');
@@ -184,55 +175,37 @@ class HlsDownloaderService {
       final batchEnd = (started + parallel).clamp(0, total);
       started = batchEnd;
 
-      final batchFutures = <Future<void>>[];
+      final futures = <Future<int?>>[];
       for (int i = batchStart; i < batchEnd; i++) {
-        batchFutures.add(_downloadSingleSegment(
-          i,
-          urls[i],
-          tempDir,
-        ));
+        futures.add(_downloadSingleSegment(i, urls[i], tempDir));
       }
 
-      // Wait for batch to complete
-      final results = await Future.wait(batchFutures, eagerError: false);
+      final results = await Future.wait(futures, eagerError: false);
 
-      for (int i = 0; i < results.length; i++) {
+      for (final result in results) {
         finished++;
-        if (results[i] != null) {
-          errors.add(batchStart + i);
-          if (!failed) {
-            failed = true;
-          }
+        if (result != null) {
+          failed = true;
         }
         final percent = ((finished / total) * 100).round();
         onProgress?.call(percent.clamp(0, 100), finished, total);
       }
     }
-
-    if (errors.isNotEmpty && errors.length > total * 0.3) {
-      throw HlsException('${errors.length}/$total segments failed to download');
-    }
   }
 
-  /// Download a single segment to temp directory
-  Future<int?> _downloadSingleSegment(
-    int index,
-    String url,
-    Directory tempDir,
-  ) async {
+  Future<int?> _downloadSingleSegment(int index, String url, Directory tempDir) async {
     try {
       final data = await _fetchBytes(url);
       final file = File('${tempDir.path}/seg_$index.ts');
       await file.writeAsBytes(data);
-      return null; // null = success
+      return null;
     } catch (e) {
-      return index; // return index = failure
+      return index;
     }
   }
 
   // ─── Merge Logic ────────────────────────────────────────────────
 
-  /// Merge downloaded .ts segments into .mp4
   Future<void> _mergeSegments(
     Directory tempDir,
     String outputPath,
@@ -240,19 +213,15 @@ class HlsDownloaderService {
     int totalSegments,
     CancelCheck? cancelCheck,
   ) async {
-    // Try FFmpeg first for proper merging
     try {
       await _mergeWithFfmpeg(tempDir, outputPath, mapUrl, totalSegments, cancelCheck);
       return;
     } catch (e) {
-      // FFmpeg failed, fall back to simple concatenation
+      // Fallback
     }
-
-    // Fallback: simple binary concatenation
     await _mergeByConcat(tempDir, outputPath, mapUrl, totalSegments);
   }
 
-  /// Merge using FFmpeg (best quality, handles all codecs)
   Future<void> _mergeWithFfmpeg(
     Directory tempDir,
     String outputPath,
@@ -260,7 +229,6 @@ class HlsDownloaderService {
     int totalSegments,
     CancelCheck? cancelCheck,
   ) async {
-    // Create file list for FFmpeg
     final fileList = StringBuffer();
     for (int i = 0; i < totalSegments; i++) {
       final segFile = File('${tempDir.path}/seg_$i.ts');
@@ -268,20 +236,12 @@ class HlsDownloaderService {
         fileList.writeln("file '${segFile.path}'");
       }
     }
-
     final listFile = File('${tempDir.path}/file_list.txt');
     await listFile.writeAsString(fileList.toString());
 
     final result = await Process.run(
       'ffmpeg',
-      [
-        '-f', 'concat',
-        '-safe', '0',
-        '-i', listFile.path,
-        '-c', 'copy',
-        '-y',
-        outputPath,
-      ],
+      ['-f', 'concat', '-safe', '0', '-i', listFile.path, '-c', 'copy', '-y', outputPath],
       runInShell: true,
     );
 
@@ -292,7 +252,6 @@ class HlsDownloaderService {
     }
   }
 
-  /// Fallback: simple binary concatenation (.ts files only)
   Future<void> _mergeByConcat(
     Directory tempDir,
     String outputPath,
@@ -303,18 +262,15 @@ class HlsDownloaderService {
     final ios = await outFile.open(mode: FileMode.write);
 
     try {
-      // Write init segment if present
       if (mapUrl != null) {
         final initData = await _fetchBytes(mapUrl);
-        await ios.writeFrom(initData);
+        ios.writeFromSync(initData);
       }
-
-      // Concatenate all segments
       for (int i = 0; i < totalSegments; i++) {
         final segFile = File('${tempDir.path}/seg_$i.ts');
         if (await segFile.exists()) {
           final data = await segFile.readAsBytes();
-          await ios.writeFrom(data);
+          ios.writeFromSync(data);
         }
       }
     } finally {
@@ -347,13 +303,8 @@ class HlsDownloaderService {
       final request = await client.getUrl(Uri.parse(url));
       request.headers.set('Referer', _referer);
       final response = await request.close();
-      if (response.statusCode != 200) {
-        return [];
-      }
-      return await response.fold<List<int>>(
-        [],
-        (prev, chunk) => prev + chunk.toList(),
-      );
+      if (response.statusCode != 200) return [];
+      return await response.fold<List<int>>([], (prev, chunk) => prev + chunk.toList());
     } catch (_) {
       return [];
     } finally {
@@ -366,12 +317,17 @@ class HlsDownloaderService {
   int _qualityScore(String quality) {
     if (quality.contains('x')) {
       final parts = quality.split('x');
-      if (parts.length == 2) {
-        return int.tryParse(parts.last) ?? 0;
-      }
+      return int.tryParse(parts.last) ?? 0;
     }
-    final num = int.tryParse(quality.replaceAll(RegExp(r'[^0-9]'), ''));
-    return num ?? 0;
+    return int.tryParse(quality.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+  }
+
+  String _extractRes(String infLine) {
+    final resMatch = RegExp(r'RESOLUTION=(\d+x\d+)').firstMatch(infLine);
+    if (resMatch != null) return resMatch.group(1)!;
+    final bwMatch = RegExp(r'BANDWIDTH=(\d+)').firstMatch(infLine);
+    if (bwMatch != null) return '${bwMatch.group(1)}bps';
+    return 'Auto';
   }
 }
 
@@ -379,8 +335,5 @@ class HlsDownloaderService {
 class VideoVariant {
   final String quality;
   final String url;
-
   VideoVariant(this.quality, this.url);
 }
-
-/// Thread-safe integer counter

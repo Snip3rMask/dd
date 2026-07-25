@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_background_service/flutter_background_service.dart';
+import "dart:io";
 import 'package:path_provider/path_provider.dart';
 
 import '../core/constants/app_constants.dart';
@@ -89,7 +90,7 @@ class BackgroundService {
 
   @pragma('vm:entry-point')
   static void _onStart(ServiceInstance instance) {
-    instance.setAsForegroundService();
+    // Foreground mode set via AndroidConfiguration
     instance.on('stop').listen((_) => instance.stopSelf());
     // The instance stays alive and listens for events
   }

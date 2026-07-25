@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import "package:mirudl_flutter/core/network/api_client.dart";
 import 'package:mirudl_flutter/data/repositories/anime_repository.dart';
 import 'package:mirudl_flutter/data/datasources/remote/anidb_api.dart';
 import 'package:mirudl_flutter/data/models/anime_item.dart';
@@ -9,7 +10,7 @@ import 'package:mirudl_flutter/core/errors/failures.dart';
 
 // Manual mock for AniDbApi
 class MockAniDbApi extends AniDbApi {
-  MockAniDbApi() ; // We override all methods
+  MockAniDbApi() : super(ApiClient()); // We override all methods
 
   @override
   Future<List<AnimeItem>> search(String query) async {
