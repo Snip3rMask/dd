@@ -53,8 +53,8 @@ class BackgroundService {
 
     service.on('processQueue').listen((_) => _processQueue());
     service.on('cancelJob').listen((data) {
-      if (data is String) {
-        final job = _repository.find(data);
+      if (data is String) { final jobId = data as String;
+        final job = _repository.find(jobId);
         if (job != null) _repository.cancel(job);
       }
     });
@@ -79,12 +79,8 @@ class BackgroundService {
   Future<void> stop() async {
     _isRunning = false;
     final service = FlutterBackgroundService();
-    service.invoke('stop');
-    await service.stopService();
+    service.invoke("stop");
   }
-
-  bool get isRunning => _isRunning;
-
   void dispose() {
     // Nothing to clean up
   }
@@ -94,6 +90,7 @@ class BackgroundService {
   @pragma('vm:entry-point')
   static void _onStart(ServiceInstance instance) {
     instance.setAsForegroundService();
+    instance.on('stop').listen((_) => instance.stopSelf());
     // The instance stays alive and listens for events
   }
 
