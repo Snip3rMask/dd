@@ -34,7 +34,7 @@ void main() {
   });
 
   test('returns null for invalid embed URL', () async {
-    final result = await useCase.call('https://anidb.app/embed/invalid');
+    final result = await useCase.call('https://anidb.app/embed/bad');
     expect(result, isNull);
   });
 }

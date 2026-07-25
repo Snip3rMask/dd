@@ -92,7 +92,7 @@ jobs:
           name: ${{ steps.name.outputs.release_name }}
           body: "Auto-built APKs from commit ${{ github.sha }}"
           prerelease: ${{ steps.name.outputs.prerelease }}
-          draft: ${{ steps.name.outputs.prerelease }}
+          draft: false
           generate_release_notes: true
           overwrite_files: true
           files: artifacts/*.apk
