@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:isolate';
 import 'package:path_provider/path_provider.dart';
 import '../core/constants/api_constants.dart';
 import '../core/utils/helpers.dart';
