@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'di/service_locator.dart';
 import 'presentation/providers/search_provider.dart';
+import 'presentation/providers/detail_provider.dart';
 import 'presentation/providers/downloads_provider.dart';
 import 'presentation/providers/settings_provider.dart';
 import 'presentation/screens/home/home_screen.dart';
@@ -17,6 +18,9 @@ class MiruDlApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider<SearchProvider>(
           create: (_) => sl<SearchProvider>(),
+        ),
+        ChangeNotifierProvider<DetailProvider>(
+          create: (_) => sl<DetailProvider>(),
         ),
         ChangeNotifierProvider<DownloadsProvider>(
           create: (_) => sl<DownloadsProvider>(),

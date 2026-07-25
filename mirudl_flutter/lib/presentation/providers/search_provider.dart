@@ -19,6 +19,12 @@ class SearchProvider extends ChangeNotifier {
   String? get error => _error;
   String get query => _query;
 
+  /// Load popular/default anime on app start
+  Future<void> loadPopular() async {
+    if (_results.isNotEmpty) return;
+    await search('popular');
+  }
+
   /// Search anime by query
   Future<void> search(String query) async {
     _query = query;

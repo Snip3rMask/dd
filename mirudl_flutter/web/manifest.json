@@ -1,0 +1,9 @@
+{
+  "name": "dd",
+  "short_name": "dd",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#1A1A2E",
+  "theme_color": "#1A1A2E",
+  "description": "Anime HLS Downloader"
+}

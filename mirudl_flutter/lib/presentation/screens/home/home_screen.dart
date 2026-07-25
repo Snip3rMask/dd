@@ -53,6 +53,14 @@ class _HomeTabState extends State<_HomeTab> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SearchProvider>().loadPopular();
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -83,7 +91,7 @@ class _HomeTabState extends State<_HomeTab> {
             child: Consumer<SearchProvider>(
               builder: (context, provider, _) {
                 if (provider.isLoading) {
-                  return const LoadingIndicator(message: 'Searching...');
+                  return const LoadingIndicator(message: 'Loading...');
                 }
 
                 if (provider.error != null) {
@@ -97,9 +105,9 @@ class _HomeTabState extends State<_HomeTab> {
                 if (provider.results.isEmpty) {
                   if (provider.query.isEmpty) {
                     return const EmptyState(
-                      icon: Icons.search,
-                      message: 'Search for anime',
-                      subtitle: 'Type in the search bar to find anime',
+                      icon: Icons.movie_filter_outlined,
+                      message: 'Browse Popular Anime',
+                      subtitle: 'Search or tap on any anime to see details',
                     );
                   }
                   return const EmptyState(

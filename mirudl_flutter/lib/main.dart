@@ -5,6 +5,7 @@ import 'app.dart';
 import 'di/service_locator.dart';
 import 'services/background_service.dart';
 import 'core/utils/logger.dart';
+import 'core/utils/permissions.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +27,9 @@ void main() async {
   };
 
   await setupServiceLocator();
+
+  // Request notification permission (Android 13+)
+  await AppPermissions.hasNotificationPermission();
 
   final bgService = sl<BackgroundService>();
   await bgService.init();

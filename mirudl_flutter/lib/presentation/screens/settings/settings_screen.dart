@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
 
+import '../../../core/utils/permissions.dart';
 import '../../providers/settings_provider.dart';
 import '../../theme/app_colors.dart';
 import 'widgets/folder_picker_tile.dart';
@@ -17,15 +19,38 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _pickFolder() async {
-    // In a real app, this would use file_picker to select a directory
-    // For now, show a dialog
-    showDialog(
-      context: context,
-      builder: (ctx) => const AlertDialog(
-        title: Text('Select Folder'),
-        content: Text('Folder picker requires platform integration.'),
-      ),
+    // Request storage permission first
+    final hasPermission = await AppPermissions.requestStorage();
+    if (!hasPermission) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Permission Required'),
+            content: const Text(
+              'Storage permission is needed to select a download folder. '
+              'Please grant it in app settings.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+      return;
+    }
+
+    // Pick a directory
+    final result = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: 'Select Download Folder',
     );
+
+    if (result != null && mounted) {
+      context.read<SettingsProvider>().setFolderPath(result);
+    }
   }
 
   @override
@@ -52,6 +77,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
               FolderPickerTile(
                 folderPath: provider.folderPath,
                 onPick: _pickFolder,
+              ),
+
+              const SizedBox(height: 24),
+
+              // Theme toggle
+              Text(
+                'APPEARANCE',
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
+              const SizedBox(height: 8),
+              Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: SwitchListTile(
+                  title: const Text('Dark Mode'),
+                  subtitle: Text(
+                    provider.darkMode ? 'Dark theme active' : 'Light theme active',
+                  ),
+                  value: provider.darkMode,
+                  onChanged: (_) => provider.toggleTheme(),
+                  secondary: Icon(
+                    provider.darkMode ? Icons.dark_mode : Icons.light_mode,
+                  ),
+                ),
               ),
 
               const SizedBox(height: 24),
@@ -109,7 +157,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('MiruDL Flutter'),
+                          Text('dd'),
                           SizedBox(height: 2),
                           Text(
                             'Version 1.0.0',
