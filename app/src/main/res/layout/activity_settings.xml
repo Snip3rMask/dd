@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background">
+
+    <!-- Header -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:paddingHorizontal="8dp"
+        android:background="@color/background">
+
+        <ImageView
+            android:id="@+id/btn_back"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_centerVertical="true"
+            android:background="@drawable/bg_icon_circle"
+            android:src="@drawable/ic_back"
+            android:padding="8dp"
+            android:tint="@color/text_primary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="@string/settings"
+            android:textColor="@color/text_primary"
+            android:textSize="17sp" />
+
+    </RelativeLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Download Folder -->
+            <TextView
+                style="@style/TextAppearance.MiruDL.SectionHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/download_folder"
+                android:layout_marginBottom="10dp" />
+
+            <TextView
+                android:id="@+id/folder_path"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_input"
+                android:paddingHorizontal="14dp"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:clickable="false"
+                android:lines="1"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/btn_select_folder"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:gravity="center"
+                android:text="@string/select_download_folder"
+                android:textColor="@color/on_primary"
+                android:background="@drawable/btn_primary"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="28dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <!-- Parallel Segments -->
+            <TextView
+                style="@style/TextAppearance.MiruDL.SectionHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/parallel_segments" />
+
+            <TextView
+                android:id="@+id/parallel_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="16"
+                android:textColor="@color/text_primary"
+                android:textSize="26sp"
+                android:layout_marginTop="6dp" />
+
+            <SeekBar
+                android:id="@+id/parallel_seekbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="32"
+                android:progress="16"
+                android:progressTint="@color/primary"
+                android:thumbTint="@color/primary"
+                android:layout_marginBottom="28dp" />
+
+            <!-- Quality -->
+            <TextView
+                style="@style/TextAppearance.MiruDL.SectionHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/preferred_quality"
+                android:layout_marginBottom="10dp" />
+
+            <Spinner
+                android:id="@+id/quality_spinner"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_input"
+                android:paddingHorizontal="14dp"
+                android:layout_marginBottom="28dp" />
+
+            <!-- Language -->
+            <TextView
+                style="@style/TextAppearance.MiruDL.SectionHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/language"
+                android:layout_marginBottom="10dp" />
+
+            <Spinner
+                android:id="@+id/lang_spinner"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_input"
+                android:paddingHorizontal="14dp"
+                android:layout_marginBottom="28dp" />
+
+            <!-- Info -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="MiruDL v1.0\nDirect HLS download from anidb.app\n\nDownloaded files are saved to your selected folder using Android's Storage Access Framework."
+                android:textColor="@color/text_tertiary"
+                android:textSize="12sp"
+                android:lineSpacingExtra="4dp" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>
