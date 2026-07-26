@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import '../../../core/utils/permissions.dart';
 import '../../providers/settings_provider.dart';
 import '../../theme/app_colors.dart';
+import '../crash_logs/crash_logs_screen.dart';
 import 'widgets/folder_picker_tile.dart';
 import 'widgets/quality_selector.dart';
 import 'widgets/language_selector.dart';
@@ -19,7 +20,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _pickFolder() async {
-    // Request storage permission first
     final hasPermission = await AppPermissions.requestStorage();
     if (!hasPermission) {
       if (mounted) {
@@ -43,7 +43,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
 
-    // Pick a directory
     final result = await FilePicker.platform.getDirectoryPath(
       dialogTitle: 'Select Download Folder',
     );
@@ -68,7 +67,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Folder picker
+              // ─── STORAGE ─────────────────────────────────
               Text(
                 'STORAGE',
                 style: Theme.of(context).textTheme.labelSmall,
@@ -81,7 +80,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               const SizedBox(height: 24),
 
-              // Theme toggle
+              // ─── APPEARANCE ──────────────────────────────
               Text(
                 'APPEARANCE',
                 style: Theme.of(context).textTheme.labelSmall,
@@ -104,7 +103,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               const SizedBox(height: 24),
 
-              // Download settings
+              // ─── DOWNLOAD ────────────────────────────────
               Text(
                 'DOWNLOAD',
                 style: Theme.of(context).textTheme.labelSmall,
@@ -127,9 +126,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
-              // About section
+              // ─── DEBUGGING ───────────────────────────────
+              Text(
+                'DEBUGGING',
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
+              const SizedBox(height: 8),
+              Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.bug_report_outlined,
+                      color: AppColors.error,
+                    ),
+                  ),
+                  title: const Text('Crash Logs'),
+                  subtitle: const Text(
+                    'View app crash reports & error logs',
+                    style: TextStyle(color: AppColors.textTertiary, fontSize: 12),
+                  ),
+                  trailing: const Icon(Icons.chevron_right,
+                      color: AppColors.textTertiary),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const CrashLogsScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // ─── ABOUT ───────────────────────────────────
               Text(
                 'ABOUT',
                 style: Theme.of(context).textTheme.labelSmall,

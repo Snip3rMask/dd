@@ -45,6 +45,10 @@ dependencies:
   # Permissions
   permission_handler: ^11.1.0
 
+  # Device & App Info
+  package_info_plus: ^8.0.0
+  device_info_plus: ^10.1.0
+
 
 dev_dependencies:
   flutter_test:

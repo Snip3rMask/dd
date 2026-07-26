@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui' as ui;
@@ -16,23 +17,36 @@ void main() async {
     DeviceOrientation.landscapeRight,
   ]);
 
+  // Initialize crash logger first
+  await Logger.instance.init();
+
+  // Global error handlers — capture every crash with full context
   FlutterError.onError = (details) {
-    Logger.instance.logException(details.exception, details.stack);
+    Logger.instance.logException(
+      details.exception,
+      details.stack,
+      screen: 'FlutterError',
+    );
     FlutterError.presentError(details);
   };
 
   ui.PlatformDispatcher.instance.onError = (error, stack) {
-    Logger.instance.logException(error, stack);
+    Logger.instance.logException(error, stack, screen: 'PlatformDispatcher');
     return true;
   };
 
-  await setupServiceLocator();
+  // Zone-level catch for all async errors
+  runZonedGuarded(() async {
+    await setupServiceLocator();
 
-  // Request notification permission (Android 13+)
-  await AppPermissions.hasNotificationPermission();
+    // Request notification permission (Android 13+)
+    await AppPermissions.hasNotificationPermission();
 
-  final bgService = sl<BackgroundService>();
-  await bgService.init();
+    final bgService = sl<BackgroundService>();
+    await bgService.init();
 
-  runApp(const MiruDlApp());
+    runApp(const MiruDlApp());
+  }, (error, stack) {
+    Logger.instance.logException(error, stack, screen: 'AppZone');
+  });
 }

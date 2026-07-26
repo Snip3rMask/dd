@@ -62,7 +62,7 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y libgtk-3-dev liblzma-dev ninja-build
 
-      - name: Regenerate Linux platform files
+      - name: Generate Linux platform files
         run: flutter create --platforms=linux .
 
       - name: Build Linux
@@ -93,11 +93,16 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Regenerate Windows platform files
+      - name: Generate Windows platform files
         run: flutter create --platforms=windows .
+
+      - name: Set up MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Build Windows
         run: flutter build windows --release
+        env:
+          CMAKE_GENERATOR: "Ninja"
 
       - name: Collect artifacts
         run: |
@@ -113,11 +118,7 @@ jobs:
   release:
     needs: [build-android, build-linux, build-windows]
     runs-on: ubuntu-latest
-    if: >
-      always() &&
-      (startsWith(github.ref, 'refs/tags/v') ||
-       github.event_name == 'push' && github.ref == 'refs/heads/main' ||
-       github.event_name == 'workflow_dispatch')
+    if: success()
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
