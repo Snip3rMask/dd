@@ -89,6 +89,7 @@ Future<void> setupServiceLocator() async {
         sl<GetQualities>(),
         sl<DownloadEpisode>(),
         sl<SettingsRepository>(),
+        sl<BackgroundService>(),
       ));
   sl.registerFactory<DownloadsProvider>(
       () => DownloadsProvider(sl<DownloadRepository>()));

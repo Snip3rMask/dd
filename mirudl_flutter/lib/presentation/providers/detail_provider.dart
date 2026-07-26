@@ -9,6 +9,7 @@ import '../../domain/usecases/get_episodes.dart';
 import '../../domain/usecases/get_languages.dart';
 import '../../domain/usecases/get_qualities.dart';
 import '../../domain/usecases/resolve_hls.dart';
+import '../../services/background_service.dart';
 
 /// ViewModel for the Anime Detail / Episode screen
 class DetailProvider extends ChangeNotifier {
@@ -18,6 +19,7 @@ class DetailProvider extends ChangeNotifier {
   final GetQualities _getQualities;
   final DownloadEpisode _downloadEpisode;
   final SettingsRepository _settings;
+  final BackgroundService _backgroundService;
 
   AnimeItem? _anime;
   List<EpisodeItem> _episodes = [];
@@ -32,6 +34,7 @@ class DetailProvider extends ChangeNotifier {
     this._getQualities,
     this._downloadEpisode,
     this._settings,
+    this._backgroundService,
   );
 
   AnimeItem? get anime => _anime;
@@ -120,6 +123,9 @@ class DetailProvider extends ChangeNotifier {
         language: episode.language.isNotEmpty ? episode.language : 'jpn',
         hlsUrl: downloadUrl,
       );
+
+      // Start background processing of the queue
+      await _backgroundService.start();
 
       notifyListeners();
     } catch (e) {

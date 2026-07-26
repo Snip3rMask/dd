@@ -54,7 +54,8 @@ class BackgroundService {
 
     service.on('processQueue').listen((_) => _processQueue());
     service.on('cancelJob').listen((data) {
-      if (data is String) { final jobId = data as String;
+      if (data is String) {
+        final jobId = data as String;
         final job = _repository.find(jobId);
         if (job != null) _repository.cancel(job);
       }
@@ -66,13 +67,15 @@ class BackgroundService {
     _initialized = true;
   }
 
-  /// Start processing the download queue
+  /// Start or signal the download queue processor
   Future<void> start() async {
-    if (_isRunning) return;
     final service = FlutterBackgroundService();
-    await service.startService();
-    _isRunning = true;
-    // Signal the service to start processing
+    if (!_isRunning) {
+      await service.startService();
+      _isRunning = true;
+    }
+    // Always signal queue processing — handles the case where
+    // the service is running but the queue loop has finished
     service.invoke('processQueue');
   }
 
