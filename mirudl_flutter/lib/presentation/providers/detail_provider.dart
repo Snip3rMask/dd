@@ -54,7 +54,7 @@ class DetailProvider extends ChangeNotifier {
   Future<void> loadEpisodes(String animeId) async {
     _isLoading = true;
     _error = null;
-    notifyListeners();
+    _safeNotify();
 
     try {
       _episodes = await _getEpisodes.call(animeId);
@@ -64,7 +64,7 @@ class DetailProvider extends ChangeNotifier {
     }
 
     _isLoading = false;
-    notifyListeners();
+    _safeNotify();
   }
 
   /// Resolve HLS URL and start download for an episode
@@ -130,7 +130,7 @@ class DetailProvider extends ChangeNotifier {
 
       _safeNotify();
     } catch (e, stack) {
-      Logger.instance.logException(e, stack, screen: 'DetailProvider.resolveAndDownload');
+      await Logger.instance.logException(e, stack, screen: 'DetailProvider.resolveAndDownload');
       _error = e.toString();
       _safeNotify();
     }

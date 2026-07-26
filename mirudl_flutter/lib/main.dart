@@ -26,12 +26,12 @@ void main() async {
       details.exception,
       details.stack,
       screen: 'FlutterError',
-    );
+    ).catchError((_) {});
     FlutterError.presentError(details);
   };
 
   ui.PlatformDispatcher.instance.onError = (error, stack) {
-    Logger.instance.logException(error, stack, screen: 'PlatformDispatcher');
+    Logger.instance.logException(error, stack, screen: 'PlatformDispatcher').catchError((_) {});
     return true;
   };
 
@@ -47,6 +47,6 @@ void main() async {
 
     runApp(const MiruDlApp());
   }, (error, stack) {
-    Logger.instance.logException(error, stack, screen: 'AppZone');
+    Logger.instance.logException(error, stack, screen: 'AppZone').catchError((_) {});
   });
 }
