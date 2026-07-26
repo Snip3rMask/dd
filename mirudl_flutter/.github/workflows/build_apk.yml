@@ -96,13 +96,39 @@ jobs:
       - name: Generate Windows platform files
         run: flutter create --platforms=windows .
 
-      - name: Set up MSVC environment
-        uses: ilammy/msvc-dev-cmd@v1
+      - name: Patch Flutter SDK for VS 2026
+        shell: pwsh
+        run: |
+          # Flutter 3.19 only knows VS 2019 (v16) & VS 2022 (v17).
+          # Runner has VS 2026 (v18) which falls to default -> VS 16 2019 (not installed).
+          # Binary-patch the snapshot: replace "Visual Studio 16 2019" with "Visual Studio 17 2022"
+          $snapshot = "$env:FLUTTER_ROOT\bin\cache\flutter_tools.snapshot"
+          if (Test-Path $snapshot) {
+            $bytes = [System.IO.File]::ReadAllBytes($snapshot)
+            $oldStr = [System.Text.Encoding]::UTF8.GetBytes("Visual Studio 16 2019")
+            $newStr = [System.Text.Encoding]::UTF8.GetBytes("Visual Studio 17 2022")
+            $count = 0
+            for ($i = 0; $i -le $bytes.Length - $oldStr.Length; $i++) {
+              $match = $true
+              for ($j = 0; $j -lt $oldStr.Length; $j++) {
+                if ($bytes[$i + $j] -ne $oldStr[$j]) { $match = $false; break }
+              }
+              if ($match) {
+                for ($j = 0; $j -lt $newStr.Length; $j++) {
+                  $bytes[$i + $j] = $newStr[$j]
+                }
+                $count++
+              }
+            }
+            Write-Host "Patched $count occurrence(s) in snapshot"
+            [System.IO.File]::WriteAllBytes($snapshot, $bytes)
+          } else {
+            Write-Host "Snapshot not found!"
+            exit 1
+          }
 
       - name: Build Windows
         run: flutter build windows --release
-        env:
-          CMAKE_GENERATOR: "Ninja"
 
       - name: Collect artifacts
         run: |
