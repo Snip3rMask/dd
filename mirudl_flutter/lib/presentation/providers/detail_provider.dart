@@ -10,6 +10,7 @@ import '../../domain/usecases/get_languages.dart';
 import '../../domain/usecases/get_qualities.dart';
 import '../../domain/usecases/resolve_hls.dart';
 import '../../services/background_service.dart';
+import '../../core/utils/logger.dart';
 
 /// ViewModel for the Anime Detail / Episode screen
 class DetailProvider extends ChangeNotifier {
@@ -127,10 +128,11 @@ class DetailProvider extends ChangeNotifier {
       // Start background processing of the queue
       await _backgroundService.start();
 
-      notifyListeners();
-    } catch (e) {
+      _safeNotify();
+    } catch (e, stack) {
+      Logger.instance.logException(e, stack, screen: 'DetailProvider.resolveAndDownload');
       _error = e.toString();
-      notifyListeners();
+      _safeNotify();
     }
   }
 
@@ -140,6 +142,15 @@ class DetailProvider extends ChangeNotifier {
 
     for (final ep in _episodes) {
       await resolveAndDownload(ep);
+    }
+  }
+
+  /// Safe notifyListeners that won't throw if disposed
+  void _safeNotify() {
+    try {
+      notifyListeners();
+    } catch (_) {
+      // Widget already disposed — ignore
     }
   }
 }

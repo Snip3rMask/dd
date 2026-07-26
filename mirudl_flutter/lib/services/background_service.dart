@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter_background_service/flutter_background_service.dart';
-import "dart:io";
+import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
 import '../core/constants/app_constants.dart';
@@ -20,6 +20,7 @@ class BackgroundService {
   final NotificationService _notificationService;
   bool _isRunning = false;
   bool _initialized = false;
+  bool _processing = false;
 
   BackgroundService({
     required DownloadRepository repository,
@@ -52,11 +53,11 @@ class BackgroundService {
       ),
     );
 
+    // Listen for events from the background service isolate
     service.on('processQueue').listen((_) => _processQueue());
     service.on('cancelJob').listen((data) {
       if (data is String) {
-        final jobId = data as String;
-        final job = _repository.find(jobId);
+        final job = _repository.find(data);
         if (job != null) _repository.cancel(job);
       }
     });
@@ -69,33 +70,42 @@ class BackgroundService {
 
   /// Start or signal the download queue processor
   Future<void> start() async {
+    // Start the foreground service (for Android notification)
     final service = FlutterBackgroundService();
     if (!_isRunning) {
-      await service.startService();
-      _isRunning = true;
+      try {
+        await service.startService();
+        _isRunning = true;
+      } catch (e) {
+        // Foreground service start failed — continue without it.
+        // Downloads will still process on the main isolate.
+        _isRunning = true;
+      }
     }
-    // Always signal queue processing — handles the case where
-    // the service is running but the queue loop has finished
-    service.invoke('processQueue');
+
+    // Process the queue directly on the main isolate
+    // (the background isolate event routing is unreliable)
+    _processQueue();
   }
 
   /// Stop the background service
   Future<void> stop() async {
     _isRunning = false;
     final service = FlutterBackgroundService();
-    service.invoke("stop");
+    try {
+      service.invoke("stop");
+    } catch (_) {}
   }
+
   void dispose() {
-    // Nothing to clean up
+    _isRunning = false;
   }
 
   // ─── Service Callbacks ──────────────────────────────────────────
 
   @pragma('vm:entry-point')
   static void _onStart(ServiceInstance instance) {
-    // Foreground mode set via AndroidConfiguration
     instance.on('stop').listen((_) => instance.stopSelf());
-    // The instance stays alive and listens for events
   }
 
   @pragma('vm:entry-point')
@@ -106,8 +116,8 @@ class BackgroundService {
   // ─── Queue Processing ──────────────────────────────────────────
 
   Future<void> _processQueue() async {
-    if (_repository.isRunning) return;
-    _repository.isRunning = true;
+    if (_processing) return;
+    _processing = true;
 
     try {
       while (true) {
@@ -124,7 +134,7 @@ class BackgroundService {
         await _processJob(currentJob);
       }
     } finally {
-      _repository.isRunning = false;
+      _processing = false;
     }
   }
 
@@ -188,12 +198,16 @@ class BackgroundService {
   }
 
   void _updateNotification(DownloadJob job) {
-    _notificationService.showProgress(
-      id: AppConstants.notificationId,
-      title: 'MiruDL',
-      message: job.episodeTitle,
-      progress: job.percent,
-    );
+    try {
+      _notificationService.showProgress(
+        id: AppConstants.notificationId,
+        title: 'MiruDL',
+        message: job.episodeTitle,
+        progress: job.percent,
+      );
+    } catch (_) {
+      // Notification failure should not crash the download
+    }
   }
 
   Future<int> _getFileSize(String path) async {

@@ -122,13 +122,16 @@ class Logger {
       final packageInfo = await PackageInfo.fromPlatform();
       _appVersion = packageInfo.version;
       _buildNumber = packageInfo.buildNumber;
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[Logger] Failed to get package info: $e');
+    }
 
     try {
       if (Platform.isAndroid) {
         final deviceInfo = await DeviceInfoPlugin().androidInfo;
         _deviceModel = '${deviceInfo.brand} ${deviceInfo.model}';
-        _osVersion = 'Android ${deviceInfo.version.release} (API ${deviceInfo.version.sdkInt})';
+        _osVersion =
+            'Android ${deviceInfo.version.release} (API ${deviceInfo.version.sdkInt})';
       } else if (Platform.isIOS) {
         final deviceInfo = await DeviceInfoPlugin().iosInfo;
         _deviceModel = '${deviceInfo.model} ${deviceInfo.name}';
@@ -137,9 +140,11 @@ class Logger {
         _deviceModel = Platform.operatingSystem;
         _osVersion = Platform.operatingSystemVersion;
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[Logger] Failed to get device info: $e');
+    }
 
-    // Load cached crash logs
+    // Load cached crash logs from disk
     await _loadCache();
   }
 
@@ -164,10 +169,10 @@ class Logger {
       screenName: screen ?? currentScreen,
     );
 
-    // Save to file
+    // Save to file (with error reporting)
     await _saveToFile(entry);
 
-    // Keep in cache
+    // Keep in memory cache
     _cache.insert(0, entry);
     if (_cache.length > 50) _cache = _cache.sublist(0, 50);
 
@@ -186,19 +191,27 @@ class Logger {
   /// Delete a specific crash log file
   Future<void> deleteCrashLog(CrashEntry entry) async {
     _cache.remove(entry);
-    final file = await _getFile(entry.id);
-    if (await file.exists()) {
-      await file.delete();
+    try {
+      final file = await _getFile(entry.id);
+      if (await file.exists()) {
+        await file.delete();
+      }
+    } catch (e) {
+      debugPrint('[Logger] Failed to delete crash log: $e');
     }
   }
 
   /// Delete all crash logs
   Future<void> clearAll() async {
     _cache.clear();
-    final dir = await getLogDirectory();
-    if (await dir.exists()) {
-      await dir.delete(recursive: true);
-      await dir.create(recursive: true);
+    try {
+      final dir = await getLogDirectory();
+      if (await dir.exists()) {
+        await dir.delete(recursive: true);
+        await dir.create(recursive: true);
+      }
+    } catch (e) {
+      debugPrint('[Logger] Failed to clear crash logs: $e');
     }
   }
 
@@ -226,10 +239,24 @@ class Logger {
   // ─── Internal ────────────────────────────────────────────────
 
   Future<void> _saveToFile(CrashEntry entry) async {
-    final file = await _getFile(entry.id);
     try {
+      final dir = await getLogDirectory();
+      final file = File('${dir.path}/crash_${entry.id}.txt');
       await file.writeAsString(entry.formattedReport);
-    } catch (_) {}
+      debugPrint('[Logger] Crash log saved: ${file.path}');
+    } catch (e) {
+      debugPrint('[Logger] FAILED to save crash log: $e');
+      // Attempt fallback: write to app's temporary directory
+      try {
+        final tempDir = await getTemporaryDirectory();
+        final fallbackFile =
+            File('${tempDir.path}/crash_fallback_${entry.id}.txt');
+        await fallbackFile.writeAsString(entry.formattedReport);
+        debugPrint('[Logger] Fallback save: ${fallbackFile.path}');
+      } catch (e2) {
+        debugPrint('[Logger] Fallback save also failed: $e2');
+      }
+    }
   }
 
   Future<File> _getFile(String id) async {
@@ -240,15 +267,21 @@ class Logger {
   Future<void> _loadCache() async {
     try {
       final dir = await getLogDirectory();
+      if (!await dir.exists()) {
+        debugPrint('[Logger] Crash log directory does not exist');
+        return;
+      }
+
       final files = await dir.list().toList();
       files.sort((a, b) => b.path.compareTo(a.path)); // newest first
 
+      int loaded = 0;
       for (final entity in files.take(50)) {
         if (entity is File && entity.path.endsWith('.txt')) {
           try {
             final content = await entity.readAsString();
-            // Try to extract crash ID from filename
-            final idMatch = RegExp(r'crash_(\d+)\.txt').firstMatch(entity.path);
+            final idMatch =
+                RegExp(r'crash_(\d+)\.txt').firstMatch(entity.path);
             final id = idMatch?.group(1) ?? '';
             if (id.isNotEmpty) {
               _cache.add(CrashEntry(
@@ -263,11 +296,17 @@ class Logger {
                 buildNumber: '',
                 screenName: _extractField(content, 'Screen'),
               ));
+              loaded++;
             }
-          } catch (_) {}
+          } catch (e) {
+            debugPrint('[Logger] Failed to parse crash file: $e');
+          }
         }
       }
-    } catch (_) {}
+      debugPrint('[Logger] Loaded $loaded crash log(s) from disk');
+    } catch (e) {
+      debugPrint('[Logger] Failed to load crash logs: $e');
+    }
   }
 
   String _extractField(String content, String label) {

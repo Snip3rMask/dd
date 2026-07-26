@@ -11,6 +11,7 @@ class DownloadsProvider extends ChangeNotifier {
   List<DownloadJob> _activeJobs = [];
   List<DownloadEntry> _completed = [];
   Timer? _refreshTimer;
+  bool _disposed = false;
 
   DownloadsProvider(this._repository) {
     refresh();
@@ -26,7 +27,7 @@ class DownloadsProvider extends ChangeNotifier {
   void refresh() {
     _activeJobs = _repository.snapshot();
     _completed = _repository.getHistory();
-    notifyListeners();
+    _safeNotify();
   }
 
   /// Cancel a download job
@@ -55,7 +56,7 @@ class DownloadsProvider extends ChangeNotifier {
   void startAutoRefresh() {
     _refreshTimer?.cancel();
     _refreshTimer = Timer.periodic(const Duration(seconds: 2), (_) {
-      refresh();
+      if (!_disposed) refresh();
     });
   }
 
@@ -65,8 +66,16 @@ class DownloadsProvider extends ChangeNotifier {
     _refreshTimer = null;
   }
 
+  void _safeNotify() {
+    if (_disposed) return;
+    try {
+      notifyListeners();
+    } catch (_) {}
+  }
+
   @override
   void dispose() {
+    _disposed = true;
     stopAutoRefresh();
     super.dispose();
   }

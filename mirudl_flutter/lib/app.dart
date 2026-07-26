@@ -31,8 +31,12 @@ class ScreenTracker extends NavigatorObserver {
   }
 
   void _updateScreen(Route route) {
-    String name = route.settings.name ?? route.toString();
-    Logger.instance.currentScreen = name;
+    try {
+      String name = route.settings.name ?? route.toString();
+      Logger.instance.currentScreen = name;
+    } catch (_) {
+      // Navigation tracking should never crash the app
+    }
   }
 }
 
