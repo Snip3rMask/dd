@@ -56,8 +56,9 @@ class BackgroundService {
     // Listen for events from the background service isolate
     service.on('processQueue').listen((_) => _processQueue());
     service.on('cancelJob').listen((data) {
-      if (data is String) {
-        final job = _repository.find(data);
+      final jobId = data?['jobId']?.toString() ?? data?.toString();
+      if (jobId != null && jobId.isNotEmpty) {
+        final job = _repository.find(jobId);
         if (job != null) _repository.cancel(job);
       }
     });
