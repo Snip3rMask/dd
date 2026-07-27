@@ -175,12 +175,7 @@ public class DownloadsActivity extends BaseActivity {
             clearBtn.setBackground(clearBg);
             clearBtn.setLayoutParams(new LinearLayout.LayoutParams(-1, dp(50)));
             box.addView(clearBtn);
-            clearBtn.setOnClickListener(v -> {
-                DownloadEntryStore.removeAll(DownloadsActivity.this, entries);
-                DownloadManager.removeFinished();
-                dialog.dismiss();
-                refresh();
-            });
+            
 
             // Cancel
             TextView cancelBtn = new TextView(this);
@@ -197,7 +192,7 @@ public class DownloadsActivity extends BaseActivity {
             LinearLayout.LayoutParams canLp = new LinearLayout.LayoutParams(-1, dp(48));
             canLp.setMargins(0, dp(10), 0, 0);
             box.addView(cancelBtn, canLp);
-            cancelBtn.setOnClickListener(v -> dialog.dismiss());
+            
 
             android.app.AlertDialog dialog = builder.setView(box).create();
             if (dialog.getWindow() != null) {
@@ -205,6 +200,13 @@ public class DownloadsActivity extends BaseActivity {
                 dialog.getWindow().setWindowAnimations(android.R.style.Animation_Dialog);
             }
             dialog.show();
+            clearBtn.setOnClickListener(v -> {
+                DownloadEntryStore.removeAll(DownloadsActivity.this, entries);
+                DownloadManager.removeFinished();
+                dialog.dismiss();
+                refresh();
+            });
+            cancelBtn.setOnClickListener(v -> dialog.dismiss());
         }
         DownloadManager.removeFinished();
         refresh();
@@ -280,48 +282,8 @@ public class DownloadsActivity extends BaseActivity {
         deleteBtn.setBackground(delBg);
         deleteBtn.setLayoutParams(new LinearLayout.LayoutParams(-1, dp(50)));
         box.addView(deleteBtn);
-        deleteBtn.setOnClickListener(v -> {
-            dlEntry.deleteFileAndRecord(this);
-            dialog.dismiss();
-            refresh();
-        });
-
-        // Remove from history
-        TextView removeBtn = new TextView(this);
-        removeBtn.setText("Remove from history only");
-        removeBtn.setTextColor(0xFFF1F0F7);
-        removeBtn.setTextSize(13);
-        removeBtn.setTypeface(null, Typeface.BOLD);
-        removeBtn.setGravity(Gravity.CENTER);
-        GradientDrawable remBg = new GradientDrawable();
-        remBg.setCornerRadius(dp(12));
-        remBg.setColor(0xFF22232D);
-        removeBtn.setBackground(remBg);
-        LinearLayout.LayoutParams remLp = new LinearLayout.LayoutParams(-1, dp(48));
-        remLp.setMargins(0, dp(10), 0, 0);
         box.addView(removeBtn, remLp);
-        removeBtn.setOnClickListener(v -> {
-            dlEntry.deleteRecordOnly(this);
-            dialog.dismiss();
-            refresh();
-        });
-
-        // Cancel
-        TextView cancelBtn = new TextView(this);
-        cancelBtn.setText("Cancel");
-        cancelBtn.setTextColor(0xFF6B687C);
-        cancelBtn.setTextSize(13);
-        cancelBtn.setTypeface(null, Typeface.BOLD);
-        cancelBtn.setGravity(Gravity.CENTER);
-        GradientDrawable canBg = new GradientDrawable();
-        canBg.setCornerRadius(dp(12));
-        canBg.setColor(0x00000000);
-        canBg.setStroke(dp(1), 0xFF2E2F3D);
-        cancelBtn.setBackground(canBg);
-        LinearLayout.LayoutParams canLp = new LinearLayout.LayoutParams(-1, dp(48));
-        canLp.setMargins(0, dp(10), 0, 0);
         box.addView(cancelBtn, canLp);
-        cancelBtn.setOnClickListener(v -> dialog.dismiss());
 
         AlertDialog dialog = new AlertDialog.Builder(this).setView(box).create();
         if (dialog.getWindow() != null) {
@@ -329,6 +291,19 @@ public class DownloadsActivity extends BaseActivity {
             dialog.getWindow().setWindowAnimations(android.R.style.Animation_Dialog);
         }
         dialog.show();
+
+        // Set click listeners after dialog is initialized
+        deleteBtn.setOnClickListener(v -> {
+            dlEntry.deleteFileAndRecord(this);
+            dialog.dismiss();
+            refresh();
+        });
+        removeBtn.setOnClickListener(v -> {
+            dlEntry.deleteRecordOnly(this);
+            dialog.dismiss();
+            refresh();
+        });
+        cancelBtn.setOnClickListener(v -> dialog.dismiss());
     }
 
     private int dp(int dp) {

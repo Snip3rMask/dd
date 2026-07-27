@@ -221,10 +221,7 @@ public class DetailActivity extends BaseActivity {
         settingsBtn.setBackground(setBg);
         settingsBtn.setLayoutParams(new LinearLayout.LayoutParams(-1, dp(50)));
         box.addView(settingsBtn);
-        settingsBtn.setOnClickListener(v -> {
-            dialog.dismiss();
-            startActivity(new Intent(DetailActivity.this, SettingsActivity.class));
-        });
+
 
         // Cancel
         TextView cancelBtn = new TextView(this);
@@ -241,14 +238,22 @@ public class DetailActivity extends BaseActivity {
         LinearLayout.LayoutParams canLp = new LinearLayout.LayoutParams(-1, dp(48));
         canLp.setMargins(0, dp(10), 0, 0);
         box.addView(cancelBtn, canLp);
-        cancelBtn.setOnClickListener(v -> dialog.dismiss());
-
         AlertDialog dialog = new AlertDialog.Builder(this).setView(box).create();
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
             dialog.getWindow().setWindowAnimations(android.R.style.Animation_Dialog);
         }
         dialog.show();
+        settingsBtn.setOnClickListener(v -> {
+            dialog.dismiss();
+            startActivity(new Intent(DetailActivity.this, SettingsActivity.class));
+        });
+        cancelBtn.setOnClickListener(v -> dialog.dismiss());
+
+
+        // Now set click listeners (dialog is initialized)
+
+
     }
 
     private void showDownloadAllDialog() {
@@ -301,10 +306,7 @@ public class DetailActivity extends BaseActivity {
         downloadBtn.setBackground(dlBg);
         downloadBtn.setLayoutParams(new LinearLayout.LayoutParams(-1, dp(50)));
         box.addView(downloadBtn);
-        downloadBtn.setOnClickListener(v -> {
-            dialog.dismiss();
-            downloadAllEpisodes();
-        });
+
 
         // Cancel
         TextView cancelBtn = new TextView(this);
@@ -321,7 +323,7 @@ public class DetailActivity extends BaseActivity {
         LinearLayout.LayoutParams canLp = new LinearLayout.LayoutParams(-1, dp(48));
         canLp.setMargins(0, dp(10), 0, 0);
         box.addView(cancelBtn, canLp);
-        cancelBtn.setOnClickListener(v -> dialog.dismiss());
+
 
         AlertDialog dialog = new AlertDialog.Builder(this).setView(box).create();
         if (dialog.getWindow() != null) {
@@ -329,6 +331,12 @@ public class DetailActivity extends BaseActivity {
             dialog.getWindow().setWindowAnimations(android.R.style.Animation_Dialog);
         }
         dialog.show();
+        downloadBtn.setOnClickListener(v -> {
+            dialog.dismiss();
+            downloadAllEpisodes();
+        });
+        cancelBtn.setOnClickListener(v -> dialog.dismiss());
+
     }
 
     private void startDownload(EpisodeItem ep) {
@@ -435,5 +443,9 @@ public class DetailActivity extends BaseActivity {
                 handler.post(() -> Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
             }
         });
+    }
+
+    private int dp(int dp) {
+        return (int) (dp * getResources().getDisplayMetrics().density);
     }
 }

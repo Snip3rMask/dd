@@ -422,17 +422,14 @@ public class MainActivity extends BaseActivity {
         refreshDownloads();
     }
 
-    private void showDeleteDownloadDialog(DownloadEntry dlEntry) {
-        int bgColor = 0xFF1A1B23;
-        int radius = dp(20);
-        int accentColor = 0xFF38BDF8;
+        private void showDeleteDownloadDialog(DownloadEntry dlEntry) {
         int errorColor = 0xFFF87171;
 
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(dp(24), dp(24), dp(24), dp(20));
 
-        // Icon + Title row
+        // Title row
         LinearLayout titleRow = new LinearLayout(this);
         titleRow.setOrientation(LinearLayout.HORIZONTAL);
         titleRow.setGravity(Gravity.CENTER_VERTICAL);
@@ -457,10 +454,9 @@ public class MainActivity extends BaseActivity {
         titleRow.addView(title, tLp);
         box.addView(titleRow, new LinearLayout.LayoutParams(-1, -2));
 
-        // Episode name
-        TextView epName = new TextView(this);
         String displayName = dlEntry.title != null ? dlEntry.title : "";
         if (displayName.startsWith("Episode ")) displayName = displayName.substring(8);
+        TextView epName = new TextView(this);
         epName.setText(displayName);
         epName.setTextColor(0xFF6B687C);
         epName.setTextSize(13);
@@ -470,25 +466,19 @@ public class MainActivity extends BaseActivity {
         enLp.setMargins(dp(58), dp(4), 0, dp(20));
         box.addView(epName, enLp);
 
-        // Action buttons
+        // Buttons
         TextView deleteBtn = new TextView(this);
         deleteBtn.setText("Delete file permanently");
         deleteBtn.setTextColor(0xFFF1F0F7);
         deleteBtn.setTextSize(14);
         deleteBtn.setTypeface(null, Typeface.BOLD);
         deleteBtn.setGravity(Gravity.CENTER);
-        deleteBtn.setPadding(0, 0, 0, 0);
         GradientDrawable delBg = new GradientDrawable();
         delBg.setCornerRadius(dp(12));
         delBg.setColor(errorColor);
         deleteBtn.setBackground(delBg);
-        deleteBtn.setLayoutParams(new LinearLayout.LayoutParams(-1, dp(50)));
+        deleteBtn.setLayoutParams(new LinearLayout.LayoutParams(-1, 0));
         box.addView(deleteBtn);
-        deleteBtn.setOnClickListener(v -> {
-            dlEntry.deleteFileAndRecord(this);
-            dialog.dismiss();
-            refreshDownloads();
-        });
 
         TextView removeBtn = new TextView(this);
         removeBtn.setText("Remove from history only");
@@ -500,14 +490,9 @@ public class MainActivity extends BaseActivity {
         remBg.setCornerRadius(dp(12));
         remBg.setColor(0xFF22232D);
         removeBtn.setBackground(remBg);
-        LinearLayout.LayoutParams remLp = new LinearLayout.LayoutParams(-1, dp(48));
+        LinearLayout.LayoutParams remLp = new LinearLayout.LayoutParams(-1, -2);
         remLp.setMargins(0, dp(10), 0, 0);
         box.addView(removeBtn, remLp);
-        removeBtn.setOnClickListener(v -> {
-            dlEntry.deleteRecordOnly(this);
-            dialog.dismiss();
-            refreshDownloads();
-        });
 
         TextView cancelBtn = new TextView(this);
         cancelBtn.setText("Cancel");
@@ -520,19 +505,32 @@ public class MainActivity extends BaseActivity {
         canBg.setColor(0x00000000);
         canBg.setStroke(dp(1), 0xFF2E2F3D);
         cancelBtn.setBackground(canBg);
-        LinearLayout.LayoutParams canLp = new LinearLayout.LayoutParams(-1, dp(48));
+        LinearLayout.LayoutParams canLp = new LinearLayout.LayoutParams(-1, -2);
         canLp.setMargins(0, dp(10), 0, 0);
         box.addView(cancelBtn, canLp);
-        cancelBtn.setOnClickListener(v -> dialog.dismiss());
 
-        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this).setView(box).create();
+        deleteBtn.setLayoutParams(new LinearLayout.LayoutParams(-1, dp(50)));
+
+        AlertDialog dialog = new AlertDialog.Builder(this).setView(box).create();
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
             dialog.getWindow().setWindowAnimations(android.R.style.Animation_Dialog);
         }
         dialog.show();
-    }
 
+        // Set listeners after dialog is created
+        deleteBtn.setOnClickListener(v -> {
+            dlEntry.deleteFileAndRecord(this);
+            dialog.dismiss();
+            refreshDownloads();
+        });
+        removeBtn.setOnClickListener(v -> {
+            dlEntry.deleteRecordOnly(this);
+            dialog.dismiss();
+            refreshDownloads();
+        });
+        cancelBtn.setOnClickListener(v -> dialog.dismiss());
+    }
     private void showDeleteMultipleDialog(List<DownloadEntry> entries) {
         if (entries.isEmpty()) return;
         String desc = entries.size() == 1 ? entries.get(0).title : entries.size() + " files";
@@ -542,7 +540,6 @@ public class MainActivity extends BaseActivity {
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(dp(24), dp(24), dp(24), dp(20));
 
-        // Icon + Title row
         LinearLayout titleRow = new LinearLayout(this);
         titleRow.setOrientation(LinearLayout.HORIZONTAL);
         titleRow.setGravity(Gravity.CENTER_VERTICAL);
@@ -567,6 +564,7 @@ public class MainActivity extends BaseActivity {
         titleRow.addView(title, tLp);
         box.addView(titleRow, new LinearLayout.LayoutParams(-1, -2));
 
+        // Message
         TextView message = new TextView(this);
         message.setText("Removing from history keeps the file on your device.");
         message.setTextColor(0xFF6B687C);
@@ -588,12 +586,6 @@ public class MainActivity extends BaseActivity {
         deleteBtn.setBackground(delBg);
         deleteBtn.setLayoutParams(new LinearLayout.LayoutParams(-1, dp(50)));
         box.addView(deleteBtn);
-        deleteBtn.setOnClickListener(v -> {
-            for (DownloadEntry e : entries) e.deleteFileAndRecord(this);
-            selectedDownloadKeys.clear();
-            dialog.dismiss();
-            refreshDownloads();
-        });
 
         // Remove from history
         TextView removeBtn = new TextView(this);
@@ -609,12 +601,6 @@ public class MainActivity extends BaseActivity {
         LinearLayout.LayoutParams remLp = new LinearLayout.LayoutParams(-1, dp(48));
         remLp.setMargins(0, dp(10), 0, 0);
         box.addView(removeBtn, remLp);
-        removeBtn.setOnClickListener(v -> {
-            for (DownloadEntry e : entries) e.deleteRecordOnly(this);
-            selectedDownloadKeys.clear();
-            dialog.dismiss();
-            refreshDownloads();
-        });
 
         // Cancel
         TextView cancelBtn = new TextView(this);
@@ -631,17 +617,30 @@ public class MainActivity extends BaseActivity {
         LinearLayout.LayoutParams canLp = new LinearLayout.LayoutParams(-1, dp(48));
         canLp.setMargins(0, dp(10), 0, 0);
         box.addView(cancelBtn, canLp);
-        cancelBtn.setOnClickListener(v -> dialog.dismiss());
 
-        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this).setView(box).create();
+        AlertDialog dialog = new AlertDialog.Builder(this).setView(box).create();
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
             dialog.getWindow().setWindowAnimations(android.R.style.Animation_Dialog);
         }
         dialog.show();
-    }
 
-    // ============ SETTINGS TAB ============
+        // Set listeners after dialog initialized
+        deleteBtn.setOnClickListener(v -> {
+            for (DownloadEntry e : entries) e.deleteFileAndRecord(this);
+            selectedDownloadKeys.clear();
+            dialog.dismiss();
+            refreshDownloads();
+        });
+        removeBtn.setOnClickListener(v -> {
+            for (DownloadEntry e : entries) e.deleteRecordOnly(this);
+            selectedDownloadKeys.clear();
+            dialog.dismiss();
+            refreshDownloads();
+        });
+        cancelBtn.setOnClickListener(v -> dialog.dismiss());
+    }
+// ============ SETTINGS TAB ============
 
     private void showCrashLogsDialog() {
         CrashLogger.markViewed(this);
