@@ -228,7 +228,7 @@ public class DetailActivity extends BaseActivity {
             startService(intent);
         }
 
-        Toast.makeText(this, "Queued: Episode " + ep.getLabel(), Toast.LENGTH_SHORT).show();
+        handler.post(() -> Toast.makeText(this, "Queued: Episode " + ep.getLabel(), Toast.LENGTH_SHORT).show());
     }
 
     private void downloadAllEpisodes() {
