@@ -199,31 +199,14 @@ public class DetailActivity extends BaseActivity {
             try {
                 List<VideoSource> variants = api.getQualities(hlsUrl);
                 String finalUrl = hlsUrl;
+                // Auto-pick preferred quality from Settings — no dialog needed
                 for (VideoSource v : variants) {
                     if (v.quality.contains(quality.replace("p", ""))) {
                         finalUrl = v.url;
                         break;
                     }
                 }
-                if (variants.size() > 1 && !finalUrl.equals(hlsUrl)) {
-                    String[] names = new String[variants.size()];
-                    for (int i = 0; i < variants.size(); i++)
-                        names[i] = variants.get(i).quality;
-
-                    String urlForDialog = finalUrl;
-                    handler.post(() -> {
-                        new AlertDialog.Builder(this)
-                                .setTitle("Select Quality")
-                                .setItems(names, (d, which) -> {
-                                    String chosenUrl = variants.get(which).url;
-                                    queueDownload(ep, chosenUrl, quality, language);
-                                })
-                                .setNegativeButton("Cancel", null)
-                                .show();
-                    });
-                } else {
-                    queueDownload(ep, finalUrl, quality, language);
-                }
+                queueDownload(ep, finalUrl, quality, language);
             } catch (Exception e) {
                 queueDownload(ep, hlsUrl, quality, language);
             }
