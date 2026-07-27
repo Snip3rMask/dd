@@ -46,78 +46,27 @@
 
     </RelativeLayout>
 
-    <ScrollView
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <LinearLayout
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/downloads_list"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingBottom="16dp">
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingVertical="8dp" />
 
-            <!-- Active Downloads -->
-            <LinearLayout
-                android:id="@+id/active_section"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone">
+        <TextView
+            android:id="@+id/empty_text"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/no_downloads"
+            android:textColor="@color/text_tertiary"
+            android:textSize="15sp"
+            android:visibility="gone" />
 
-                <TextView
-                    style="@style/TextAppearance.MiruDL.SectionHeader"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="8dp"
-                    android:text="ACTIVE" />
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/active_downloads"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:nestedScrollingEnabled="false" />
-
-            </LinearLayout>
-
-            <!-- Completed -->
-            <LinearLayout
-                android:id="@+id/completed_section"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone">
-
-                <TextView
-                    style="@style/TextAppearance.MiruDL.SectionHeader"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="8dp"
-                    android:text="COMPLETED" />
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/completed_downloads"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:nestedScrollingEnabled="false" />
-
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/empty_text"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:gravity="center"
-                android:text="@string/no_downloads"
-                android:textColor="@color/text_tertiary"
-                android:textSize="15sp"
-                android:visibility="gone" />
-
-        </LinearLayout>
-
-    </ScrollView>
+    </FrameLayout>
 
 </LinearLayout>
