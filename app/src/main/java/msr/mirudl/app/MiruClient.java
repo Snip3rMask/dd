@@ -57,7 +57,7 @@ public class MiruClient {
             if (block.contains("data-search-item")) {
                 AnimeItem item = new AnimeItem();
                 // Extract href
-                int hrefIdx = block.indexOf("href=\"");;
+                int hrefIdx = block.indexOf("href=\"");
                 if (hrefIdx >= 0) {
                     int hrefEnd = block.indexOf("\"", hrefIdx + 6);
                     if (hrefEnd > 0) {
@@ -261,10 +261,10 @@ public class MiruClient {
             if (item.title == null) item.title = "";
 
             // Extract poster image
-            int imgIdx = block.indexOf("src="");
+            int imgIdx = block.indexOf("src=\"");
             if (imgIdx >= 0) {
                 imgIdx += 5;
-                int imgEnd = block.indexOf(""", imgIdx);
+                int imgEnd = block.indexOf('"', imgIdx);
                 if (imgEnd > imgIdx) {
                     item.thumbnail = block.substring(imgIdx, imgEnd);
                     if (item.thumbnail.startsWith("/")) {
