@@ -3,10 +3,11 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="14dp"
-    android:background="@drawable/bg_card_ripple"
+    android:padding="10dp"
+    android:paddingStart="16dp"
+    android:background="@drawable/bg_card"
     android:layout_marginHorizontal="16dp"
-    android:layout_marginTop="8dp">
+    android:layout_marginTop="2dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -16,75 +17,52 @@
 
         <ImageView
             android:id="@+id/dl_check"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:layout_marginEnd="8dp"
             android:src="@android:drawable/checkbox_off_background"
             android:tint="@color/primary"
-            android:padding="4dp" />
+            android:padding="2dp" />
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/dl_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/dl_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp"
-                android:maxLines="1"
-                android:ellipsize="end" />
-
-            <TextView
-                android:id="@+id/dl_parent"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp"
-                android:layout_marginTop="2dp" />
-
-        </LinearLayout>
-
-        <ImageView
-            android:id="@+id/dl_delete"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:src="@drawable/ic_delete"
-            android:background="@drawable/bg_icon_circle"
-            android:tint="@color/text_tertiary"
-            android:padding="6dp" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_marginStart="40dp"
-        android:orientation="horizontal">
+            android:textColor="@color/text_primary"
+            android:textSize="13sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
 
         <TextView
             android:id="@+id/dl_size"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_chip"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="3dp"
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="2dp"
             android:textColor="@color/text_tertiary"
-            android:textSize="11sp" />
+            android:textSize="10sp"
+            android:layout_marginEnd="6dp" />
 
-        <TextView
-            android:id="@+id/dl_date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:gravity="center_vertical"
-            android:textColor="@color/text_tertiary"
-            android:textSize="11sp" />
+        <ImageView
+            android:id="@+id/dl_delete"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_delete"
+            android:background="@drawable/bg_icon_circle"
+            android:tint="@color/text_tertiary"
+            android:padding="4dp" />
 
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/dl_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="4dp"
+        android:textColor="@color/text_tertiary"
+        android:textSize="10sp" />
 
 </LinearLayout>

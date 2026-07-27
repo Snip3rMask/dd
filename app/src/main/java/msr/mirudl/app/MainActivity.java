@@ -331,31 +331,19 @@ public class MainActivity extends BaseActivity {
     // ============ DOWNLOADS TAB ============
 
     private void initDownloadsTab() {
-        activeList = findViewById(R.id.active_downloads);
-        completedList = findViewById(R.id.completed_downloads);
-        activeSection = findViewById(R.id.active_section);
-        completedSection = findViewById(R.id.completed_section);
+        downloadsList = findViewById(R.id.downloads_list);
         emptyTextDl = findViewById(R.id.empty_text_dl);
         btnClearFinished = findViewById(R.id.btn_clear_finished);
 
         btnClearFinished.setOnClickListener(v -> clearFinished());
 
-        activeAdapter = new DownloadAdapter(this, true, null, new DownloadAdapter.OnActionListener() {
+        downloadAdapter = new DownloadAdapter(this, new DownloadAdapter.OnActionListener() {
             @Override public void onCancel(DownloadManager.Job job) {
                 if (job != null) {
                     DownloadManager.cancel(job);
                     refreshDownloads();
                 }
             }
-            @Override public void onClick(DownloadEntryStore.Entry entry) {}
-            @Override public void onDelete(DownloadEntryStore.Entry entry) {
-                DownloadEntryStore.remove(MainActivity.this, entry);
-                refreshDownloads();
-            }
-        });
-
-        completedAdapter = new DownloadAdapter(this, false, null, new DownloadAdapter.OnActionListener() {
-            @Override public void onCancel(DownloadManager.Job job) {}
             @Override public void onClick(DownloadEntryStore.Entry entry) {
                 DownloadEntry dlEntry = DownloadEntry.fromRecord(entry);
                 if (dlEntry.uri != null) {
@@ -388,22 +376,14 @@ public class MainActivity extends BaseActivity {
                 return selectedDownloadKeys.contains(dlEntry.key());
             }
             @Override public void onGroupDelete(String groupName) {
-                List<DownloadEntryStore.Entry> groupEntries = new ArrayList<>();
-                for (DownloadEntryStore.Entry e : DownloadEntryStore.all(MainActivity.this)) {
-                    if (groupName.equals(e.parentName())) groupEntries.add(e);
-                }
-                List<DownloadEntry> groupFiles = new ArrayList<>();
-                for (DownloadEntryStore.Entry e : groupEntries) {
-                    groupFiles.add(DownloadEntry.fromRecord(e));
-                }
-                showDeleteMultipleDialog(groupFiles);
+                // Toggle folder expansion
+                downloadAdapter.toggleFolder(groupName);
+                refreshDownloads();
             }
         });
 
-        activeList.setLayoutManager(new LinearLayoutManager(this));
-        completedList.setLayoutManager(new LinearLayoutManager(this));
-        activeList.setAdapter(activeAdapter);
-        completedList.setAdapter(completedAdapter);
+        downloadsList.setLayoutManager(new LinearLayoutManager(this));
+        downloadsList.setAdapter(downloadAdapter);
     }
 
     private void refreshDownloads() {
@@ -415,12 +395,10 @@ public class MainActivity extends BaseActivity {
             if (!j.finished) { hasActive = true; break; }
         }
 
-        activeSection.setVisibility(hasActive ? View.VISIBLE : View.GONE);
-        completedSection.setVisibility(!completed.isEmpty() ? View.VISIBLE : View.GONE);
-        emptyTextDl.setVisibility(!hasActive && completed.isEmpty() ? View.VISIBLE : View.GONE);
+        emptyTextDl.setVisibility(
+            (!hasActive && (completed == null || completed.isEmpty())) ? View.VISIBLE : View.GONE);
 
-        activeAdapter.setJobs(active);
-        completedAdapter.setEntries(completed);
+        downloadAdapter.setData(active, completed);
     }
 
     private void clearFinished() {
