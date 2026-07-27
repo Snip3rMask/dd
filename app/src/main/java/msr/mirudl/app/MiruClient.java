@@ -57,7 +57,7 @@ public class MiruClient {
             if (block.contains("data-search-item")) {
                 AnimeItem item = new AnimeItem();
                 // Extract href
-                int hrefIdx = block.indexOf("href=\"");
+                int hrefIdx = block.indexOf("href=\"");;
                 if (hrefIdx >= 0) {
                     int hrefEnd = block.indexOf("\"", hrefIdx + 6);
                     if (hrefEnd > 0) {
@@ -228,9 +228,9 @@ public class MiruClient {
             AnimeItem item = new AnimeItem();
 
             // Extract href/title from the card link
-            int hrefIdx = block.indexOf("href="");
+            int hrefIdx = block.indexOf("href=\"");
             if (hrefIdx >= 0) {
-                int hrefEnd = block.indexOf(""", hrefIdx + 6);
+                int hrefEnd = block.indexOf('"', hrefIdx + 6);
                 if (hrefEnd > 0) {
                     item.url = block.substring(hrefIdx + 6, hrefEnd);
                     String[] parts = item.url.split("-");
@@ -240,10 +240,10 @@ public class MiruClient {
 
             // Extract title — look for alt attribute on img or aria-label or text
             // Try <h3> or <p> with title text
-            int titleIdx = block.indexOf("alt="");
+            int titleIdx = block.indexOf("alt=\"");
             if (titleIdx >= 0) {
                 titleIdx += 5;
-                int titleEnd = block.indexOf(""", titleIdx);
+                int titleEnd = block.indexOf('"', titleIdx);
                 if (titleEnd > titleIdx) {
                     item.title = block.substring(titleIdx, titleEnd).trim();
                 }
