@@ -12,11 +12,21 @@ public class CancelDownloadReceiver extends BroadcastReceiver {
         String jobId = intent.getStringExtra("jobId");
         if (jobId == null) return;
 
-        // Cancel all active jobs
         boolean hadActive = false;
-        for (DownloadManager.Job j : DownloadManager.snapshot()) {
-            if (!j.finished) {
-                DownloadManager.cancel(j);
+
+        if ("all".equals(jobId)) {
+            // Cancel ALL active jobs
+            for (DownloadManager.Job j : DownloadManager.snapshot()) {
+                if (!j.finished) {
+                    DownloadManager.cancel(j);
+                    hadActive = true;
+                }
+            }
+        } else {
+            // Cancel a specific job by ID
+            DownloadManager.Job job = DownloadManager.find(jobId);
+            if (job != null && !job.finished) {
+                DownloadManager.cancel(job);
                 hadActive = true;
             }
         }
@@ -29,7 +39,7 @@ public class CancelDownloadReceiver extends BroadcastReceiver {
             android.app.Notification.Builder b = new android.app.Notification.Builder(context, MiruDLApp.CHANNEL_DOWNLOADS)
                     .setSmallIcon(android.R.drawable.stat_sys_download_done)
                     .setContentTitle("MiruDL")
-                    .setContentText("Downloads cancelled")
+                    .setContentText(jobId != null && !"all".equals(jobId) ? "Download cancelled" : "Downloads cancelled")
                     .setOngoing(false)
                     .setProgress(0, 0, false);
             mgr.notify(1001, b.build());
@@ -40,8 +50,10 @@ public class CancelDownloadReceiver extends BroadcastReceiver {
             }, 3000);
         }
 
-        // Stop the download service
-        Intent stopIntent = new Intent(context, DownloadService.class);
-        context.stopService(stopIntent);
+        // Stop the download service if no more active jobs
+        if (DownloadManager.activeCount() == 0) {
+            Intent stopIntent = new Intent(context, DownloadService.class);
+            context.stopService(stopIntent);
+        }
     }
 }

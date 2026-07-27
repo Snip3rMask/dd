@@ -7,6 +7,28 @@ import java.util.List;
 import java.util.UUID;
 
 public final class DownloadManager {
+    public static synchronized Job findByAnimeAndEpisode(String anime, String episode) {
+        for (Job j : JOBS) {
+            if (!j.finished &&
+                j.animeTitle != null && j.animeTitle.equals(anime) &&
+                j.episodeTitle != null && j.episodeTitle.equals(episode)) {
+                return j;
+            }
+        }
+        return null;
+    }
+
+    public static synchronized boolean hasActiveJob(String anime, String episode) {
+        for (Job j : JOBS) {
+            if (!j.finished &&
+                j.animeTitle != null && j.animeTitle.equals(anime) &&
+                j.episodeTitle != null && j.episodeTitle.equals(episode)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static final String STATUS_QUEUED = "Queued";
     public static final String STATUS_DOWNLOADING = "Downloading";
     public static final String STATUS_COMPLETED = "Completed";
@@ -50,13 +72,38 @@ public final class DownloadManager {
 
     public static synchronized Job enqueue(String anime, String episode, String quality,
                                             String language, String hlsUrl) {
+        // Prevent duplicate: same anime + episode + quality that is not finished
+        for (Job existing : JOBS) {
+            if (!existing.finished &&
+                existing.animeTitle != null && existing.animeTitle.equals(anime) &&
+                existing.episodeTitle != null && existing.episodeTitle.equals(episode) &&
+                existing.quality != null && existing.quality.equals(quality)) {
+                return existing;
+            }
+        }
         Job job = new Job(anime, episode, quality, language, hlsUrl);
         JOBS.add(job);
         return job;
     }
 
     public static synchronized void enqueueAll(List<Job> jobs) {
-        JOBS.addAll(jobs);
+        // Deduplicate by anime+episode+quality - keep first (newest) occurrence
+        java.util.LinkedHashSet<String> seen = new java.util.LinkedHashSet<>();
+        java.util.List<Job> deduped = new java.util.ArrayList<>();
+        // Process in reverse to keep newest entry for each key
+        java.util.List<Job> all = new java.util.ArrayList<>();
+        all.addAll(jobs);
+        all.addAll(JOBS);
+        for (int i = all.size() - 1; i >= 0; i--) {
+            Job j = all.get(i);
+            String key = (j.animeTitle != null ? j.animeTitle : "") + "|||" + (j.episodeTitle != null ? j.episodeTitle : "") + "|||" + (j.quality != null ? j.quality : "");
+            if (!seen.contains(key) || j.finished) {
+                seen.add(key);
+                deduped.add(0, j);
+            }
+        }
+        JOBS.clear();
+        JOBS.addAll(deduped);
     }
 
     public static synchronized Job find(String id) {

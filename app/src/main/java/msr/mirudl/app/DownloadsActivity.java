@@ -42,6 +42,11 @@ public class DownloadsActivity extends BaseActivity {
             @Override public void onCancel(DownloadManager.Job job) {
                 if (job != null) {
                     DownloadManager.cancel(job);
+                    // Also notify the service
+                    Intent cancelIntent = new Intent(DownloadsActivity.this, DownloadService.class);
+                    cancelIntent.setAction("cancel");
+                    cancelIntent.putExtra("jobId", job.id);
+                    startService(cancelIntent);
                     refresh();
                 }
             }

@@ -109,6 +109,29 @@ public class SettingsActivity extends BaseActivity {
             @Override public void onNothingSelected(AdapterView<?> p) {}
         });
 
+        // GitHub link in Developer section
+        View githubLink = findViewById(R.id.id_github_link);
+        if (githubLink != null) {
+            githubLink.setOnClickListener(v -> {
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("https://github.com/msrofficial/MiruDL-App")));
+                } catch (Exception ignored) {}
+            });
+        }
+
+        // Crash Reports button
+        View crashBtn = findViewById(R.id.btn_crash_reports);
+        if (crashBtn != null) {
+            crashBtn.setOnClickListener(v -> {
+                try {
+                    Intent intent = new Intent(SettingsActivity.this, MainActivity.class);
+                    intent.putExtra("showCrashLogs", true);
+                    startActivity(intent);
+                } catch (Exception ignored) {}
+            });
+        }
+
         updateFolderDisplay();
     }
 

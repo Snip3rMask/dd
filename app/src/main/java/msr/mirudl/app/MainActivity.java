@@ -328,6 +328,11 @@ public class MainActivity extends BaseActivity {
             @Override public void onCancel(DownloadManager.Job job) {
                 if (job != null) {
                     DownloadManager.cancel(job);
+                    // Also notify the service
+                    Intent cancelIntent = new Intent(MainActivity.this, DownloadService.class);
+                    cancelIntent.setAction("cancel");
+                    cancelIntent.putExtra("jobId", job.id);
+                    startService(cancelIntent);
                     refreshDownloads();
                 }
             }
@@ -781,8 +786,8 @@ public class MainActivity extends BaseActivity {
             @Override public void onNothingSelected(AdapterView<?> p) {}
         });
 
-        // GitHub link in About
-        TextView githubLink = findViewById(R.id.id_github_link);
+        // GitHub link in Developer section
+        View githubLink = findViewById(R.id.id_github_link);
         if (githubLink != null) {
             githubLink.setOnClickListener(v -> {
                 try {
@@ -793,10 +798,14 @@ public class MainActivity extends BaseActivity {
         }
 
         // Crash Reports button
-        TextView crashBtn = findViewById(R.id.btn_crash_reports);
+        View crashBtn = findViewById(R.id.btn_crash_reports);
         if (crashBtn != null) {
             crashBtn.setOnClickListener(v -> showCrashLogsDialog());
         }
+
+        // About section - app card click (if any future use)
+        View appSection = findViewById(R.id.btn_crash_reports);
+        // Already handled above
 
         updateFolderDisplay();
     }
