@@ -210,74 +210,83 @@ public class MiruClient {
 
     private List<AnimeItem> parseBrowseResults(String html) {
         List<AnimeItem> results = new ArrayList<>();
-        // Browse page uses anime cards with class "group relative"
+        // Look for anime links: /anime/{slug-id}
         int idx = 0;
         while (true) {
-            int cardStart = html.indexOf("group relative", idx);
-            if (cardStart < 0) break;
-            // Find the card wrapper start (go back to find <a or parent div)
-            int wrapperStart = html.lastIndexOf("<", cardStart);
-            if (wrapperStart < 0) break;
-            int cardEnd = html.indexOf("</a>", cardStart);
-            if (cardEnd < 0) {
-                cardEnd = html.indexOf("</div>", cardStart + 50);
-                if (cardEnd < 0) break;
-            }
-            String block = html.substring(wrapperStart, cardEnd + 4);
+            int linkStart = html.indexOf("/anime/", idx);
+            if (linkStart < 0) break;
 
+            // Find wrapping <a tag
+            int aStart = html.lastIndexOf("<a ", linkStart);
+            if (aStart < 0 || aStart < idx - 50) {
+                idx = linkStart + 7;
+                continue;
+            }
+
+            int aEnd = html.indexOf("</a>", linkStart);
+            if (aEnd < 0) break;
+
+            String block = html.substring(aStart, aEnd + 4);
             AnimeItem item = new AnimeItem();
 
-            // Extract href/title from the card link
-            int hrefIdx = block.indexOf("href=\"");
-            if (hrefIdx >= 0) {
-                int hrefEnd = block.indexOf('"', hrefIdx + 6);
-                if (hrefEnd > 0) {
-                    item.url = block.substring(hrefIdx + 6, hrefEnd);
-                    String[] parts = item.url.split("-");
-                    item.id = parts[parts.length - 1];
+            // URL + ID from /anime/slug-id
+            int hrefEnd = html.indexOf("\"", linkStart + 7);
+            if (hrefEnd > linkStart) {
+                item.url = html.substring(linkStart, hrefEnd);
+                String slugPart = item.url.startsWith("/anime/") ? item.url.substring(7) : item.url;
+                String[] parts = slugPart.split("-");
+                item.id = parts.length > 0 ? parts[parts.length - 1] : null;
+            }
+
+            // Title from img alt
+            int altIdx = block.indexOf("alt=\"");
+            if (altIdx >= 0) {
+                altIdx += 5;
+                int altEnd = block.indexOf("\"", altIdx);
+                if (altEnd > altIdx) {
+                    String alt = block.substring(altIdx, altEnd).trim();
+                    if (!alt.isEmpty() && !alt.toLowerCase().contains("thumbnail")
+                            && !alt.toLowerCase().contains("poster")) {
+                        item.title = android.text.Html.fromHtml(alt).toString();
+                    }
                 }
             }
 
-            // Extract title — look for alt attribute on img or aria-label or text
-            // Try <h3> or <p> with title text
-            int titleIdx = block.indexOf("alt=\"");
-            if (titleIdx >= 0) {
-                titleIdx += 5;
-                int titleEnd = block.indexOf('"', titleIdx);
-                if (titleEnd > titleIdx) {
-                    item.title = block.substring(titleIdx, titleEnd).trim();
-                }
-            }
+            // Fallback: h2/h3/p text
             if (item.title == null || item.title.isEmpty()) {
-                // Try extracting from text in the card
-                int textStart = block.lastIndexOf(">", cardStart + 100);
-                if (textStart >= 0) {
-                    String text = block.substring(textStart + 1).trim();
-                    if (!text.isEmpty() && text.length() < 100) {
-                        item.title = android.text.Html.fromHtml(text).toString();
-                    }
+                java.util.regex.Matcher m = java.util.regex.Pattern.compile(
+                        "<(h[23]|p)\\b[^>]*>(.*?)</\\1>",
+                        java.util.regex.Pattern.DOTALL).matcher(block);
+                if (m.find()) {
+                    String t = android.text.Html.fromHtml(m.group(2)).toString().trim();
+                    if (!t.isEmpty() && t.length() < 100) item.title = t;
                 }
             }
             if (item.title == null) item.title = "";
 
-            // Extract poster image
+            // Poster image
             int imgIdx = block.indexOf("src=\"");
             if (imgIdx >= 0) {
                 imgIdx += 5;
-                int imgEnd = block.indexOf('"', imgIdx);
+                int imgEnd = block.indexOf("\"", imgIdx);
                 if (imgEnd > imgIdx) {
-                    item.thumbnail = block.substring(imgIdx, imgEnd);
-                    if (item.thumbnail.startsWith("/")) {
-                        item.thumbnail = BASE + item.thumbnail;
+                    String src = block.substring(imgIdx, imgEnd);
+                    if (!src.startsWith("http")) {
+                        src = (src.startsWith("/") ? BASE : BASE + "/") + src;
                     }
+                    item.thumbnail = src;
                 }
             }
 
             if (item.id != null && !item.title.isEmpty()) {
-                results.add(item);
+                boolean dup = false;
+                for (AnimeItem ex : results) {
+                    if (ex.id != null && ex.id.equals(item.id)) { dup = true; break; }
+                }
+                if (!dup) results.add(item);
             }
 
-            idx = cardEnd + 4;
+            idx = aEnd + 4;
         }
         return results;
     }
