@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DownloadsActivity extends BaseActivity {
@@ -72,6 +73,9 @@ public class DownloadsActivity extends BaseActivity {
                 downloadAdapter.toggleFolder(groupName);
                 refresh();
             }
+            @Override public void onGroupDeleteRequest(String groupName) {
+                showGroupDeleteDialog(groupName);
+            }
         });
 
         downloadsList.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
@@ -120,6 +124,19 @@ public class DownloadsActivity extends BaseActivity {
         }
         DownloadManager.removeFinished();
         refresh();
+    }
+
+    private void showGroupDeleteDialog(String groupName) {
+        List<DownloadEntryStore.Entry> all = DownloadEntryStore.all(this);
+        List<DownloadEntry> groupEntries = new ArrayList<>();
+        for (DownloadEntryStore.Entry e : all) {
+            if (groupName.equals(e.parentName())) {
+                groupEntries.add(DownloadEntry.fromRecord(e));
+            }
+        }
+        if (!groupEntries.isEmpty()) {
+            showDeleteDownloadDialog(groupEntries.get(0));
+        }
     }
 
     private void showDeleteDownloadDialog(DownloadEntry dlEntry) {

@@ -374,6 +374,17 @@ public class MainActivity extends BaseActivity {
                 DownloadEntry dlEntry = DownloadEntry.fromRecord(entry);
                 return selectedDownloadKeys.contains(dlEntry.key());
             }
+            @Override public void onGroupDeleteRequest(String groupName) {
+                List<DownloadEntry> groupEntries = new ArrayList<>();
+                List<DownloadEntryStore.Entry> all = DownloadEntryStore.all(MainActivity.this);
+                for (DownloadEntryStore.Entry e : all) {
+                    if (groupName.equals(e.parentName())) {
+                        groupEntries.add(DownloadEntry.fromRecord(e));
+                    }
+                }
+                showDeleteMultipleDialog(groupEntries);
+            }
+
             @Override public void onGroupDelete(String groupName) {
                 // Toggle folder expansion
                 downloadAdapter.toggleFolder(groupName);

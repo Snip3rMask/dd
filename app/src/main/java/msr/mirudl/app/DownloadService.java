@@ -18,12 +18,14 @@ public class DownloadService extends Service {
     private static final String ACTION_CANCEL = "cancel";
     private static final String EXTRA_JOB_ID = "jobId";
     private static final String EXTRA_JOBS = "jobs";
+    private static final int NOTIF_ID = 1001;
 
     private final java.util.concurrent.ExecutorService worker =
             java.util.concurrent.Executors.newSingleThreadExecutor();
 
     // Track total for multi-episode batch
     private volatile int totalJobCount = 0;
+    private final android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
     public static Intent startIntent(Context context, List<DownloadManager.Job> jobs) {
         Intent intent = new Intent(context, DownloadService.class);
@@ -46,13 +48,22 @@ public class DownloadService extends Service {
         String action = intent.getAction();
         if (ACTION_CANCEL.equals(action)) {
             String jobId = intent.getStringExtra(EXTRA_JOB_ID);
-            DownloadManager.Job job = DownloadManager.find(jobId);
-            if (job != null) {
-                DownloadManager.cancel(job);
-                pushNotif(buildNotif(job));
+            if ("all".equals(jobId)) {
+                // Cancel all active jobs
+                for (DownloadManager.Job j : DownloadManager.snapshot()) {
+                    if (!j.finished) {
+                        DownloadManager.cancel(j);
+                    }
+                }
+            } else {
+                DownloadManager.Job job = DownloadManager.find(jobId);
+                if (job != null) {
+                    DownloadManager.cancel(job);
+                }
             }
+            pushNotif(buildNotif(null, "Downloads cancelled", 0, true));
             if (DownloadManager.activeCount() == 0) {
-                stopForeground(false);
+                stopForeground(true);
                 stopSelf();
             }
             return START_NOT_STICKY;
@@ -67,7 +78,7 @@ public class DownloadService extends Service {
         totalJobCount = jobs.size();
         DownloadManager.setRunning(true);
 
-        startForeground(1001, buildNotif(null, "Starting " + totalJobCount + " downloads...", 0, false));
+        startForeground(NOTIF_ID, buildNotif(null, "Starting " + totalJobCount + " downloads...", 0, false));
 
         worker.execute(() -> processQueue());
         return START_NOT_STICKY;
@@ -120,27 +131,33 @@ public class DownloadService extends Service {
                 completed++;
                 // Show completed notification immediately
                 String info = getBatchInfo(jobIndex + 1);
-                pushNotif(buildNotif(job, "✓ " + info + " Done", 100, false));
+                pushNotif(buildNotif(job, "\u2713 " + info + " Done", 100, true));
 
             } catch (Exception e) {
                 String msg = e.getMessage() != null ? e.getMessage() : "Failed";
                 DownloadManager.fail(job, msg);
                 failed++;
                 String info = getBatchInfo(i + 1);
-                pushNotif(buildNotif(job, "✗ " + info + " " + msg, 0, false));
+                pushNotif(buildNotif(job, "\u2716 " + info + " " + msg, 0, true));
             }
         }
 
         DownloadManager.setRunning(false);
 
         // Final summary
-        String summary = "✓ " + completed + " done";
-        if (failed > 0) summary += ", ✗ " + failed + " failed";
+        String summary = "\u2713 " + completed + " done";
+        if (failed > 0) summary += ", \u2716 " + failed + " failed";
         if (completed + failed > 0) {
             pushNotif(buildNotif(null, summary, 100, true));
         }
 
-        stopForeground(false);
+        // Auto-cancel notification after 5 seconds
+        mainHandler.postDelayed(() -> {
+            NotificationManager mgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            if (mgr != null) mgr.cancel(NOTIF_ID);
+        }, 5000);
+
+        stopForeground(true);
         stopSelf();
     }
 
@@ -153,7 +170,7 @@ public class DownloadService extends Service {
     /** Push notification using job info */
     private void pushNotif(android.app.Notification notif) {
         NotificationManager mgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        if (mgr != null) mgr.notify(1001, notif);
+        if (mgr != null) mgr.notify(NOTIF_ID, notif);
     }
 
     /** Build a notification from a Job (title + text + progress) */

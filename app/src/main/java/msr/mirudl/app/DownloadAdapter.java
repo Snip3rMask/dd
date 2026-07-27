@@ -2,10 +2,12 @@ package msr.mirudl.app;
 
 import android.content.Context;
 import android.graphics.Typeface;
-import android.view.LayoutInflater;
+import android.graphics.drawable.GradientDrawable;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -22,68 +24,59 @@ import java.util.Map;
 public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final int TYPE_SECTION = 0;
-    private static final int TYPE_GROUP = 1;
+    private static final int TYPE_FOLDER = 1;
     private static final int TYPE_ACTIVE = 2;
     private static final int TYPE_COMPLETED = 3;
 
-    private final Context context;
+    private final Context ctx;
     private final List<Object> items = new ArrayList<>();
-    private final OnActionListener listener;
+    private final java.util.Set<String> expandedFolders = new java.util.HashSet<>();
+    private OnActionListener listener;
 
     public interface OnActionListener {
-        default void onCancel(DownloadManager.Job job) {}
-        default void onClick(DownloadEntryStore.Entry entry) {}
-        default void onDelete(DownloadEntryStore.Entry entry) {}
-        default void onSelectionToggle(DownloadEntryStore.Entry entry) {}
-        default boolean isSelected(DownloadEntryStore.Entry entry) { return false; }
-        default void onGroupDelete(String groupName) {}
+        void onCancel(DownloadManager.Job job);
+        void onClick(DownloadEntryStore.Entry entry);
+        void onDelete(DownloadEntryStore.Entry entry);
+        void onSelectionToggle(DownloadEntryStore.Entry entry);
+        boolean isSelected(DownloadEntryStore.Entry entry);
+        void onGroupDelete(String groupName);
+        void onGroupDeleteRequest(String groupName);
     }
 
     public DownloadAdapter(Context context, OnActionListener listener) {
-        this.context = context;
+        this.ctx = context;
         this.listener = listener;
     }
 
     public void setData(List<DownloadManager.Job> jobs, List<DownloadEntryStore.Entry> entries) {
         items.clear();
 
-        // Active section
+        // ── ACTIVE SECTION ──
         boolean hasActive = false;
-        for (DownloadManager.Job j : jobs) {
-            if (!j.finished) { hasActive = true; break; }
-        }
+        for (DownloadManager.Job j : jobs) if (!j.finished) { hasActive = true; break; }
 
         if (hasActive) {
-            items.add(new SectionHeader("DOWNLOADING"));
+            items.add("DOWNLOADING");
             for (DownloadManager.Job job : jobs) {
-                if (!job.finished) {
-                    items.add(job);
-                }
+                if (!job.finished) items.add(job);
             }
         }
 
-        // Completed section - grouped by anime folder
+        // ── COMPLETED SECTION — grouped by anime folder ──
         if (entries != null && !entries.isEmpty()) {
-            // Group by parent (anime name)
             Map<String, List<DownloadEntryStore.Entry>> grouped = new LinkedHashMap<>();
             for (DownloadEntryStore.Entry e : entries) {
-                String parent = e.parentName();
-                grouped.computeIfAbsent(parent, k -> new ArrayList<>()).add(e);
+                grouped.computeIfAbsent(e.parentName(), k -> new ArrayList<>()).add(e);
             }
 
-            items.add(new SectionHeader("COMPLETED"));
-
-            // Create expand/collapse tracking
-            if (expandedFolders == null) {
-                expandedFolders = new java.util.HashSet<>();
-            }
+            items.add("COMPLETED");
 
             for (Map.Entry<String, List<DownloadEntryStore.Entry>> group : grouped.entrySet()) {
                 String folderName = group.getKey();
                 List<DownloadEntryStore.Entry> folderEntries = group.getValue();
                 boolean isExpanded = expandedFolders.contains(folderName);
 
-                items.add(new GroupHeader(folderName, folderEntries.size(), isExpanded));
+                items.add(new FolderHeader(folderName, folderEntries, isExpanded));
 
                 if (isExpanded) {
                     for (DownloadEntryStore.Entry e : folderEntries) {
@@ -93,39 +86,28 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             }
         }
 
-        // Empty state
-        if (items.isEmpty()) {
-            items.add(new EmptyState());
-        }
-
+        if (items.isEmpty()) items.add(""); // empty placeholder
         notifyDataSetChanged();
     }
 
-    private java.util.Set<String> expandedFolders = new java.util.HashSet<>();
-
-    public void toggleFolder(String folderName) {
-        if (expandedFolders.contains(folderName)) {
-            expandedFolders.remove(folderName);
-        } else {
-            expandedFolders.add(folderName);
-        }
-        // Rebuild items with new expand state
-        // We need the current jobs and entries, but we don't have them here
-        // The caller should call setData() again
+    public void toggleFolder(String name) {
+        if (expandedFolders.contains(name)) expandedFolders.remove(name);
+        else expandedFolders.add(name);
     }
 
-    public boolean isFolderExpanded(String folderName) {
-        return expandedFolders.contains(folderName);
+    public boolean isExpanded(String name) {
+        return expandedFolders.contains(name);
     }
 
-    @Override
-    public int getItemCount() { return items.size(); }
+    // ── VIEW TYPES ──
+
+    @Override public int getItemCount() { return items.size(); }
 
     @Override
     public int getItemViewType(int position) {
         Object item = items.get(position);
-        if (item instanceof SectionHeader) return TYPE_SECTION;
-        if (item instanceof GroupHeader) return TYPE_GROUP;
+        if (item instanceof String) return TYPE_SECTION;
+        if (item instanceof FolderHeader) return TYPE_FOLDER;
         if (item instanceof DownloadManager.Job) return TYPE_ACTIVE;
         if (item instanceof DownloadEntryStore.Entry) return TYPE_COMPLETED;
         return TYPE_SECTION;
@@ -133,142 +115,364 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        LayoutInflater inflater = LayoutInflater.from(context);
         switch (viewType) {
             case TYPE_SECTION:
-                return new SectionHolder(inflater.inflate(R.layout.item_section_header, parent, false));
-            case TYPE_GROUP:
-                return new GroupHolder(inflater.inflate(R.layout.item_group_header, parent, false));
+                return new SectionHolder(makeSectionView());
+            case TYPE_FOLDER:
+                return new FolderHolder(makeFolderView());
             case TYPE_ACTIVE:
-                return new ActiveHolder(inflater.inflate(R.layout.item_download_active, parent, false));
+                return new ActiveHolder(makeActiveView());
             case TYPE_COMPLETED:
-                return new CompletedHolder(inflater.inflate(R.layout.item_download_completed, parent, false));
+                return new CompletedHolder(makeCompletedView());
         }
-        return new SectionHolder(inflater.inflate(R.layout.item_section_header, parent, false));
+        return new SectionHolder(makeSectionView());
     }
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder h, int pos) {
         Object item = items.get(pos);
         if (h instanceof SectionHolder) {
-            ((SectionHolder) h).text.setText(item.toString());
-        } else if (h instanceof GroupHolder) {
-            GroupHeader gh = (GroupHeader) item;
-            GroupHolder ghHolder = (GroupHolder) h;
-            ghHolder.title.setText(gh.name);
-            ghHolder.count.setText(gh.count + " episode" + (gh.count > 1 ? "s" : ""));
-            ghHolder.expandIcon.setImageResource(gh.expanded
-                    ? android.R.drawable.arrow_up_float
-                    : android.R.drawable.arrow_down_float);
-            ghHolder.itemView.setOnClickListener(v -> {
-                toggleFolder(gh.name);
-                // Need to rebuild - caller should call setData
-                if (listener != null) listener.onGroupDelete(gh.name); // reuse onGroupDelete to signal rebuild
-            });
+            String text = (String) item;
+            ((SectionHolder) h).tv.setText(text.isEmpty() ? "No downloads yet" : text);
+        } else if (h instanceof FolderHolder) {
+            bindFolder((FolderHolder) h, (FolderHeader) item);
         } else if (h instanceof ActiveHolder) {
-            ActiveHolder ah = (ActiveHolder) h;
-            DownloadManager.Job job = (DownloadManager.Job) item;
-            ah.animeTitle.setText(job.animeTitle != null ? job.animeTitle : "");
-            ah.episodeTitle.setText(job.episodeTitle != null ? job.episodeTitle : "");
-            ah.status.setText(job.status != null ? job.status : "");
-            ah.progress.setProgress(Math.max(0, Math.min(100, job.percent)));
-            ah.cancelBtn.setOnClickListener(v -> {
-                if (listener != null) listener.onCancel(job);
-            });
+            bindActive((ActiveHolder) h, (DownloadManager.Job) item);
         } else if (h instanceof CompletedHolder) {
-            CompletedHolder ch = (CompletedHolder) h;
-            DownloadEntryStore.Entry entry = (DownloadEntryStore.Entry) item;
-            ch.title.setText(entry.title != null ? entry.title : "");
-            ch.size.setText(formatSize(entry.size));
-            ch.date.setText(formatDate(entry.completedAt));
-
-            ch.itemView.setOnClickListener(v -> {
-                if (listener != null) listener.onClick(entry);
-            });
-
-            if (ch.checkIcon != null) {
-                boolean selected = listener != null && listener.isSelected(entry);
-                ch.checkIcon.setImageResource(selected
-                        ? android.R.drawable.checkbox_on_background
-                        : android.R.drawable.checkbox_off_background);
-                ch.checkIcon.setOnClickListener(v -> {
-                    if (listener != null) listener.onSelectionToggle(entry);
-                });
-            }
-
-            ch.deleteBtn.setOnClickListener(v -> {
-                if (listener != null) listener.onDelete(entry);
-            });
+            bindCompleted((CompletedHolder) h, (DownloadEntryStore.Entry) item);
         }
     }
 
-    // ============ VIEW HOLDERS ============
+    // ── MAKE VIEWS ──
 
-    static class SectionHolder extends RecyclerView.ViewHolder {
-        TextView text;
-        SectionHolder(View v) { super(v); text = (TextView) v; }
+    private TextView makeSectionView() {
+        TextView tv = new TextView(ctx);
+        tv.setPadding(dp(20), dp(16), dp(20), dp(8));
+        tv.setTextColor(0xFF6F6A76);
+        tv.setTextSize(12);
+        tv.setTypeface(null, Typeface.BOLD);
+        tv.setLetterSpacing(0.08f);
+        tv.setLayoutParams(new RecyclerView.LayoutParams(-1, -2));
+        return tv;
     }
 
-    static class GroupHolder extends RecyclerView.ViewHolder {
-        TextView title, count;
-        ImageView expandIcon;
-        GroupHolder(View v) {
+    private View makeFolderView() {
+        LinearLayout card = new LinearLayout(ctx);
+        card.setOrientation(LinearLayout.HORIZONTAL);
+        card.setGravity(Gravity.CENTER_VERTICAL);
+        card.setPadding(dp(4), dp(6), dp(12), dp(6));
+        card.setLayoutParams(new RecyclerView.LayoutParams(-1, dp(68)));
+        RecyclerView.LayoutParams lp = (RecyclerView.LayoutParams) card.getLayoutParams();
+        lp.setMargins(dp(12), dp(6), dp(12), 0);
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setCornerRadius(dp(16));
+        bg.setColor(0xFF1D1B20);
+        card.setBackground(bg);
+
+        // Expand icon
+        ImageView icon = new ImageView(ctx);
+        icon.setId(R.id.folder_icon);
+        icon.setImageResource(android.R.drawable.arrow_down_float);
+        icon.setColorFilter(0xFF9A94A0);
+        icon.setPadding(dp(12), dp(10), dp(12), dp(10));
+        card.addView(icon, new LinearLayout.LayoutParams(dp(56), dp(56)));
+
+        // Text column
+        LinearLayout textCol = new LinearLayout(ctx);
+        textCol.setOrientation(LinearLayout.VERTICAL);
+        textCol.setGravity(Gravity.CENTER_VERTICAL);
+        card.addView(textCol, new LinearLayout.LayoutParams(0, -1, 1));
+
+        TextView groupTitle = new TextView(ctx);
+        groupTitle.setId(R.id.group_title);
+        groupTitle.setTextColor(0xFFF1EDF4);
+        groupTitle.setTextSize(16);
+        groupTitle.setTypeface(null, Typeface.BOLD);
+        groupTitle.setMaxLines(1);
+        groupTitle.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        textCol.addView(groupTitle, new LinearLayout.LayoutParams(-1, -2));
+
+        TextView groupStatus = new TextView(ctx);
+        groupStatus.setId(R.id.group_status);
+        groupStatus.setTextColor(0xFF9A94A0);
+        groupStatus.setTextSize(12);
+        groupStatus.setTypeface(null, Typeface.NORMAL);
+        groupStatus.setMaxLines(1);
+        groupStatus.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams gsLp = new LinearLayout.LayoutParams(-1, -2);
+        gsLp.setMargins(0, dp(4), 0, 0);
+        textCol.addView(groupStatus, gsLp);
+
+        // Delete icon
+        ImageView deleteIcon = new ImageView(ctx);
+        deleteIcon.setId(R.id.folder_delete);
+        deleteIcon.setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
+        deleteIcon.clearColorFilter();
+        deleteIcon.setPadding(dp(6), dp(6), dp(6), dp(6));
+        card.addView(deleteIcon, new LinearLayout.LayoutParams(dp(48), dp(48)));
+
+        return card;
+    }
+
+    private View makeActiveView() {
+        LinearLayout card = new LinearLayout(ctx);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(dp(14), dp(12), dp(14), dp(12));
+        card.setLayoutParams(new RecyclerView.LayoutParams(-1, -2));
+        RecyclerView.LayoutParams lp = (RecyclerView.LayoutParams) card.getLayoutParams();
+        lp.setMargins(dp(16), dp(4), dp(16), 0);
+        GradientDrawable bg = new GradientDrawable();
+        bg.setCornerRadius(dp(14));
+        bg.setColor(0xFF1D1B20);
+        card.setBackground(bg);
+
+        // Anime name
+        TextView animeTv = new TextView(ctx);
+        animeTv.setId(R.id.dl_anime);
+        animeTv.setTextColor(0xFF6F6A76);
+        animeTv.setTextSize(11);
+        animeTv.setMaxLines(1);
+        animeTv.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        card.addView(animeTv, new LinearLayout.LayoutParams(-1, -2));
+
+        // Episode title
+        TextView epTv = new TextView(ctx);
+        epTv.setId(R.id.dl_title);
+        epTv.setTextColor(0xFFF1EDF4);
+        epTv.setTextSize(14);
+        epTv.setMaxLines(1);
+        epTv.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams epLp = new LinearLayout.LayoutParams(-1, -2);
+        epLp.setMargins(0, dp(2), 0, 0);
+        card.addView(epTv, epLp);
+
+        // Progress row
+        LinearLayout row = new LinearLayout(ctx);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(-1, -2);
+        rowLp.setMargins(0, dp(8), 0, 0);
+        card.addView(row, rowLp);
+
+        TextView statusTv = new TextView(ctx);
+        statusTv.setId(R.id.dl_status);
+        statusTv.setTextColor(0xFF9A94A0);
+        statusTv.setTextSize(12);
+        statusTv.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1));
+        row.addView(statusTv);
+
+        ProgressBar progress = new ProgressBar(ctx, null, android.R.attr.progressBarStyleHorizontal);
+        progress.setId(R.id.dl_progress);
+        progress.setMax(100);
+        progress.setProgressDrawable(ctx.getResources().getDrawable(R.drawable.progress_track, ctx.getTheme()));
+        row.addView(progress, new LinearLayout.LayoutParams(0, dp(6), 2));
+
+        ImageView cancelBtn = new ImageView(ctx);
+        cancelBtn.setId(R.id.dl_cancel);
+        cancelBtn.setImageResource(R.drawable.ic_close);
+        cancelBtn.setColorFilter(0xFFF2B8B5);
+        cancelBtn.setPadding(dp(6), dp(6), dp(6), dp(6));
+        LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(dp(30), dp(30));
+        clp.setMargins(dp(8), 0, 0, 0);
+        cancelBtn.setLayoutParams(clp);
+        GradientDrawable cancelBg = new GradientDrawable();
+        cancelBg.setShape(GradientDrawable.OVAL);
+        cancelBg.setColor(0x00000000);
+        cancelBtn.setBackground(cancelBg);
+        row.addView(cancelBtn);
+
+        return card;
+    }
+
+    private View makeCompletedView() {
+        LinearLayout card = new LinearLayout(ctx);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(dp(10), dp(8), dp(14), dp(8));
+        card.setLayoutParams(new RecyclerView.LayoutParams(-1, -2));
+        RecyclerView.LayoutParams lp = (RecyclerView.LayoutParams) card.getLayoutParams();
+        lp.setMargins(dp(20), dp(1), dp(12), 0);
+
+        // Row: check | title | size | delete
+        LinearLayout row = new LinearLayout(ctx);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        card.addView(row, new LinearLayout.LayoutParams(-1, -2));
+
+        ImageView check = new ImageView(ctx);
+        check.setId(R.id.dl_check);
+        check.setImageResource(android.R.drawable.checkbox_off_background);
+        check.setColorFilter(0xFFD0BCFF);
+        check.setPadding(dp(4), dp(4), dp(4), dp(4));
+        row.addView(check, new LinearLayout.LayoutParams(dp(28), dp(28)));
+
+        TextView titleTv = new TextView(ctx);
+        titleTv.setId(R.id.dl_title);
+        titleTv.setTextColor(0xFFF1EDF4);
+        titleTv.setTextSize(13);
+        titleTv.setMaxLines(1);
+        titleTv.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        row.addView(titleTv, new LinearLayout.LayoutParams(0, -2, 1));
+
+        TextView sizeTv = new TextView(ctx);
+        sizeTv.setId(R.id.dl_size);
+        sizeTv.setTextColor(0xFF6F6A76);
+        sizeTv.setTextSize(10);
+        sizeTv.setPadding(dp(6), dp(2), dp(6), dp(2));
+        GradientDrawable chip = new GradientDrawable();
+        chip.setCornerRadius(dp(8));
+        chip.setColor(0xFF2B292F);
+        sizeTv.setBackground(chip);
+        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(-2, -2);
+        slp.setMargins(0, 0, dp(6), 0);
+        row.addView(sizeTv, slp);
+
+        ImageView deleteBtn = new ImageView(ctx);
+        deleteBtn.setId(R.id.dl_delete);
+        deleteBtn.setImageResource(R.drawable.ic_delete);
+        deleteBtn.setColorFilter(0xFF6F6A76);
+        deleteBtn.setPadding(dp(4), dp(4), dp(4), dp(4));
+        row.addView(deleteBtn, new LinearLayout.LayoutParams(dp(28), dp(28)));
+
+        // Date text
+        TextView dateTv = new TextView(ctx);
+        dateTv.setId(R.id.dl_date);
+        dateTv.setTextColor(0xFF6F6A76);
+        dateTv.setTextSize(10);
+        LinearLayout.LayoutParams dateLp = new LinearLayout.LayoutParams(-2, -2);
+        dateLp.setMargins(dp(32), dp(4), 0, 0);
+        card.addView(dateTv, dateLp);
+
+        return card;
+    }
+
+    // ── BIND ──
+
+    private void bindFolder(FolderHolder h, FolderHeader fh) {
+        h.title.setText(fh.name);
+
+        // Calculate total size
+        long totalBytes = 0;
+        for (DownloadEntryStore.Entry e : fh.entries) totalBytes += e.size;
+        String sizeStr = formatSize(totalBytes);
+        String status = fh.entries.size() + " episode" + (fh.entries.size() > 1 ? "s" : "")
+                + "  \u2022  " + sizeStr;
+        h.status.setText(status);
+
+        h.icon.setImageResource(fh.expanded
+                ? android.R.drawable.arrow_up_float
+                : android.R.drawable.arrow_down_float);
+
+        // Card click = toggle expand. Listener handles toggle + refresh.
+        // Do NOT call toggleFolder() here — the listener does it.
+        h.card.setOnClickListener(v -> {
+            if (listener != null) listener.onGroupDelete(fh.name);
+        });
+
+        // Delete icon = show delete dialog for entire group
+        h.deleteIcon.setOnClickListener(v -> {
+            if (listener != null) listener.onGroupDeleteRequest(fh.name);
+        });
+    }
+
+    private void bindActive(ActiveHolder h, DownloadManager.Job job) {
+        h.animeTv.setText(job.animeTitle != null ? job.animeTitle : "");
+        h.epTv.setText(job.episodeTitle != null ? job.episodeTitle : "");
+        h.statusTv.setText(job.status != null ? job.status : "");
+        h.progress.setProgress(Math.max(0, Math.min(100, job.percent)));
+        h.cancelBtn.setOnClickListener(v -> {
+            if (listener != null) listener.onCancel(job);
+        });
+    }
+
+    private void bindCompleted(CompletedHolder h, DownloadEntryStore.Entry entry) {
+        h.titleTv.setText(entry.title != null ? entry.title : "");
+        h.sizeTv.setText(formatSize(entry.size));
+        h.dateTv.setText(formatDate(entry.completedAt));
+
+        boolean selected = listener != null && listener.isSelected(entry);
+        h.check.setImageResource(selected
+                ? android.R.drawable.checkbox_on_background
+                : android.R.drawable.checkbox_off_background);
+        h.check.setOnClickListener(v -> {
+            if (listener != null) listener.onSelectionToggle(entry);
+        });
+
+        h.card.setOnClickListener(v -> {
+            if (listener != null) listener.onClick(entry);
+        });
+
+        h.deleteBtn.setOnClickListener(v -> {
+            if (listener != null) listener.onDelete(entry);
+        });
+    }
+
+    // ── HOLDERS ──
+
+    static class SectionHolder extends RecyclerView.ViewHolder {
+        TextView tv;
+        SectionHolder(View v) { super(v); tv = (TextView) v; }
+    }
+
+    static class FolderHolder extends RecyclerView.ViewHolder {
+        View card;
+        ImageView icon, deleteIcon;
+        TextView title, status;
+        FolderHolder(View v) {
             super(v);
+            card = v;
+            icon = v.findViewById(R.id.folder_icon);
             title = v.findViewById(R.id.group_title);
-            count = v.findViewById(R.id.group_count);
-            expandIcon = v.findViewById(R.id.group_expand);
+            status = v.findViewById(R.id.group_status);
+            deleteIcon = v.findViewById(R.id.folder_delete);
         }
     }
 
     static class ActiveHolder extends RecyclerView.ViewHolder {
-        TextView animeTitle, episodeTitle, status;
+        TextView animeTv, epTv, statusTv;
         ProgressBar progress;
         ImageView cancelBtn;
         ActiveHolder(View v) {
             super(v);
-            animeTitle = v.findViewById(R.id.dl_anime);
-            episodeTitle = v.findViewById(R.id.dl_title);
-            status = v.findViewById(R.id.dl_status);
+            animeTv = v.findViewById(R.id.dl_anime);
+            epTv = v.findViewById(R.id.dl_title);
+            statusTv = v.findViewById(R.id.dl_status);
             progress = v.findViewById(R.id.dl_progress);
             cancelBtn = v.findViewById(R.id.dl_cancel);
         }
     }
 
     static class CompletedHolder extends RecyclerView.ViewHolder {
-        TextView title, size, date;
-        ImageView deleteBtn, checkIcon;
+        View card;
+        TextView titleTv, sizeTv, dateTv;
+        ImageView check, deleteBtn;
         CompletedHolder(View v) {
             super(v);
-            title = v.findViewById(R.id.dl_title);
-            size = v.findViewById(R.id.dl_size);
-            date = v.findViewById(R.id.dl_date);
+            card = v;
+            titleTv = v.findViewById(R.id.dl_title);
+            sizeTv = v.findViewById(R.id.dl_size);
+            dateTv = v.findViewById(R.id.dl_date);
+            check = v.findViewById(R.id.dl_check);
             deleteBtn = v.findViewById(R.id.dl_delete);
-            checkIcon = v.findViewById(R.id.dl_check);
         }
     }
 
-    // ============ ITEM TYPES ============
+    // ── DATA TYPES ──
 
-    static class SectionHeader {
+    static class FolderHeader {
         final String name;
-        SectionHeader(String name) { this.name = name; }
-        @Override public String toString() { return name; }
-    }
-
-    static class GroupHeader {
-        final String name;
-        final int count;
+        final List<DownloadEntryStore.Entry> entries;
         final boolean expanded;
-        GroupHeader(String name, int count, boolean expanded) {
-            this.name = name; this.count = count; this.expanded = expanded;
+        FolderHeader(String name, List<DownloadEntryStore.Entry> entries, boolean expanded) {
+            this.name = name; this.entries = entries; this.expanded = expanded;
         }
     }
 
-    static class EmptyState {
-        @Override public String toString() { return "No downloads yet"; }
-    }
+    // ── HELPERS ──
 
-    // ============ HELPERS ============
+    private int dp(int dp) {
+        return (int) (dp * ctx.getResources().getDisplayMetrics().density);
+    }
 
     private String formatSize(long bytes) {
         if (bytes < 1024) return bytes + " B";

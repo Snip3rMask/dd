@@ -28,16 +28,21 @@ jobs:
         with:
           gradle-version: 8.9
 
-      - name: Generate Gradle Wrapper
+      - name: Ensure Gradle Wrapper
         run: |
-          mkdir -p /tmp/wrap-gen
-          cd /tmp/wrap-gen
-          echo "" > settings.gradle
-          echo "" > build.gradle
-          gradle wrapper --gradle-version=8.9
-          cp -r gradle/wrapper $GITHUB_WORKSPACE/gradle/
-          cp gradlew gradlew.bat $GITHUB_WORKSPACE/
-          chmod +x $GITHUB_WORKSPACE/gradlew
+          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
+            mkdir -p /tmp/wrap-gen
+            cd /tmp/wrap-gen
+            echo "" > settings.gradle
+            echo "" > build.gradle
+            for i in 1 2 3; do
+              gradle wrapper --gradle-version=8.9 && break
+              sleep 5
+            done
+            cp -r gradle/wrapper $GITHUB_WORKSPACE/gradle/
+            cp gradlew gradlew.bat $GITHUB_WORKSPACE/
+            chmod +x $GITHUB_WORKSPACE/gradlew
+          fi
 
       - name: Build all APKs
         run: ./gradlew assembleDebug
