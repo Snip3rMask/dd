@@ -54,10 +54,9 @@ public class MainActivity extends BaseActivity {
     private final AniDbApi api = AniDbApi.getInstance();
 
     // Downloads
-    private RecyclerView activeList, completedList;
-    private View activeSection, completedSection;
+    private RecyclerView downloadsList;
     private TextView emptyTextDl, btnClearFinished;
-    private DownloadAdapter activeAdapter, completedAdapter;
+    private DownloadAdapter downloadAdapter;
 
     private final Set<String> selectedDownloadKeys = new HashSet<>();
     // Settings
