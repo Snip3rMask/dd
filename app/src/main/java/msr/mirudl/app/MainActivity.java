@@ -728,32 +728,21 @@ public class MainActivity extends BaseActivity {
             }
         }
 
-        // Close button
+                // Close button
         TextView closeBtn = new TextView(this);
         closeBtn.setText("Close");
-        closeBtn.setTextColor(0xFF6B687C);
+        closeBtn.setTextColor(0xFFF1F0F7);
         closeBtn.setTextSize(14);
         closeBtn.setTypeface(null, Typeface.BOLD);
         closeBtn.setGravity(Gravity.CENTER);
         GradientDrawable closeBg = new GradientDrawable();
         closeBg.setCornerRadius(dp(12));
-        closeBg.setColor(0x00000000);
-        closeBg.setStroke(dp(1), 0xFF2E2F3D);
+        closeBg.setColor(0xFF22232D);
         closeBtn.setBackground(closeBg);
-        closeBtn.setPadding(0, 0, 0, 0);
         LinearLayout.LayoutParams closeLp = new LinearLayout.LayoutParams(-1, dp(48));
-        closeLp.setMargins(0, dp(12), 0, 0);
+        closeLp.setMargins(0, dp(16), 0, 0);
         closeBtn.setLayoutParams(closeLp);
-        closeBtn.setGravity(Gravity.CENTER);
-        closeBtn.setBackground(UiHelper.rounded(getColor(R.color.surface_variant), dp(100)));
-        LinearLayout.LayoutParams closeLp = new LinearLayout.LayoutParams(-1, dp(50));
-        closeLp.setMargins(0, dp(12), 0, 0);
-        box.addView(closeBtn, closeLp);
-
-        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this).setView(box).create();
-        if (dialog.getWindow() != null)
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        dialog.show();
+        box.addView(closeBtn);
         closeBtn.setOnClickListener(v -> dialog.dismiss());
     }
 
