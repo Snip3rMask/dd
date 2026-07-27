@@ -121,6 +121,12 @@ public final class HlsDownloader {
 
         downloadSegments(segments, tempDir, clampParallel(parallelSegments), progress, cancel);
 
+        // Check if cancelled after segment download
+        if (cancel != null && cancel.isCancelled()) {
+            deleteRecursive(tempDir);
+            throw new IOException("Download cancelled by user");
+        }
+
         String cleanName = sanitize(fileName);
         String animeDir = extractParent(fileName);
         Uri treeUri = getDownloadDir(context);
@@ -161,6 +167,10 @@ public final class HlsDownloader {
         int total = urls.size();
 
         for (int i = 0; i < total; i++) {
+            if (cancel != null && cancel.isCancelled()) {
+                executor.shutdownNow();
+                return;
+            }
             final int idx = i;
             executor.execute(() -> {
                 if (cancel != null && cancel.isCancelled()) return;
@@ -180,8 +190,16 @@ public final class HlsDownloader {
 
         executor.shutdown();
         try {
-            executor.awaitTermination(1, TimeUnit.HOURS);
-        } catch (InterruptedException ignored) {}
+            // Poll cancel token every second while waiting for downloads
+            while (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
+                if (cancel != null && cancel.isCancelled()) {
+                    executor.shutdownNow();
+                    break;
+                }
+            }
+        } catch (InterruptedException ignored) {
+            executor.shutdownNow();
+        }
     }
 
     // ============ PLAYLIST PARSING ============

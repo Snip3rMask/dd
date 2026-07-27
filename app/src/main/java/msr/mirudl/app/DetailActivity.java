@@ -72,15 +72,11 @@ public class DetailActivity extends BaseActivity {
                 return;
             }
             if (!StorageSettings.hasDownloadUri(this)) {
-                new AlertDialog.Builder(this)
-                        .setTitle("Select Download Folder")
-                        .setMessage("Please select a download folder first in Settings")
-                        .setPositiveButton("Open Settings", (d, w) ->
-                                startActivity(new Intent(this, SettingsActivity.class)))
-                        .setNegativeButton("Cancel", null)
-                        .show();
-                return;
-            }
+            startActivity(new Intent(this, SettingsActivity.class));
+            Toast.makeText(this, "Please select a download folder first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
             new AlertDialog.Builder(this)
                     .setTitle("Download All Episodes")
                     .setMessage("Start downloading all " + episodes.size() + " episodes?")
@@ -180,15 +176,11 @@ public class DetailActivity extends BaseActivity {
 
     private void startDownload(EpisodeItem ep) {
         if (!StorageSettings.hasDownloadUri(this)) {
-            new AlertDialog.Builder(this)
-                    .setTitle("Select Download Folder")
-                    .setMessage("Please select a download folder first in Settings")
-                    .setPositiveButton("Go to Settings", (d, w) ->
-                            startActivity(new Intent(this, SettingsActivity.class)))
-                    .setNegativeButton("Cancel", null)
-                    .show();
+            startActivity(new Intent(this, SettingsActivity.class));
+            Toast.makeText(this, "Please select a download folder first", Toast.LENGTH_SHORT).show();
             return;
         }
+
 
         String quality = StorageSettings.getPreferredQuality(this);
         String language = ep.language != null ? ep.language : "jpn";

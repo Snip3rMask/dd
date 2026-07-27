@@ -135,8 +135,13 @@ public class DownloadService extends Service {
 
             } catch (Exception e) {
                 String msg = e.getMessage() != null ? e.getMessage() : "Failed";
-                DownloadManager.fail(job, msg);
-                failed++;
+                // If cancelled by user, mark as cancelled instead of failed
+                if (msg.contains("cancelled by user") || msg.contains("Cancelled")) {
+                    DownloadManager.cancel(job);
+                } else {
+                    DownloadManager.fail(job, msg);
+                    failed++;
+                }
                 String info = getBatchInfo(i + 1);
                 pushNotif(buildNotif(job, "\u2716 " + info + " " + msg, 0, true));
             }
