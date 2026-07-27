@@ -13,7 +13,7 @@
     <string name="queued">Queued</string>
     <string name="select_download_folder">Select Download Folder</string>
     <string name="download_folder">Download Folder</string>
-    <string name="parallel_segments">Parallel Segments</string>
+    <string name="parallel_segments">Download Speed</string>
     <string name="preferred_quality">Preferred Quality</string>
     <string name="select_episodes">Select Episodes</string>
     <string name="download_all">Download All</string>

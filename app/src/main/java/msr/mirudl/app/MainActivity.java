@@ -716,6 +716,14 @@ public class MainActivity extends BaseActivity {
         dialog.show();
     }
 
+
+    private String speedLabel(int parallel) {
+        if (parallel <= 4) return "Slow";
+        if (parallel <= 8) return "Normal";
+        if (parallel <= 16) return "Fast";
+        return "Very Fast";
+    }
+
     private void initSettingsTab() {
         folderText = findViewById(R.id.folder_path);
         findViewById(R.id.btn_select_folder).setOnClickListener(v -> pickFolder());
@@ -725,7 +733,7 @@ public class MainActivity extends BaseActivity {
 
         int currentParallel = StorageSettings.getParallelSegments(this);
         parallelBar.setProgress(currentParallel);
-        parallelValue.setText(String.valueOf(currentParallel));
+        parallelValue.setText(speedLabel(currentParallel));
 
         parallelBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onStartTrackingTouch(SeekBar bar) {}
@@ -734,7 +742,7 @@ public class MainActivity extends BaseActivity {
             public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
                 if (fromUser) {
                     int val = Math.max(1, progress);
-                    parallelValue.setText(String.valueOf(val));
+                    parallelValue.setText(speedLabel(val));
                     StorageSettings.setParallelSegments(MainActivity.this, val);
                 }
             }

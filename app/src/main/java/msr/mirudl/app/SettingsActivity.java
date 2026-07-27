@@ -59,7 +59,7 @@ public class SettingsActivity extends BaseActivity {
 
         int currentParallel = StorageSettings.getParallelSegments(this);
         parallelBar.setProgress(currentParallel);
-        parallelValue.setText(String.valueOf(currentParallel));
+        parallelValue.setText(speedLabel(currentParallel));
 
         parallelBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onStartTrackingTouch(SeekBar bar) {}
@@ -68,7 +68,7 @@ public class SettingsActivity extends BaseActivity {
             public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
                 if (fromUser) {
                     int val = Math.max(1, progress);
-                    parallelValue.setText(String.valueOf(val));
+                    parallelValue.setText(speedLabel(val));
                     StorageSettings.setParallelSegments(SettingsActivity.this, val);
                 }
             }
@@ -130,5 +130,12 @@ public class SettingsActivity extends BaseActivity {
         } else {
             folderText.setText("Not selected");
         }
+    }
+
+    private String speedLabel(int parallel) {
+        if (parallel <= 4) return "Slow";
+        if (parallel <= 8) return "Normal";
+        if (parallel <= 16) return "Fast";
+        return "Very Fast";
     }
 }

@@ -214,8 +214,17 @@ public class DetailActivity extends BaseActivity {
     }
 
     private void queueDownload(EpisodeItem ep, String hlsUrl, String quality, String language) {
+        // Guard: skip if already queued or downloading
+        String label = "Episode " + ep.getLabel();
+        for (DownloadManager.Job existing : DownloadManager.snapshot()) {
+            if (!existing.finished && existing.animeTitle.equals(animeTitle) && existing.episodeTitle.equals(label)) {
+                handler.post(() -> Toast.makeText(this, "Already queued: " + label, Toast.LENGTH_SHORT).show());
+                return;
+            }
+        }
+
         DownloadManager.Job job = DownloadManager.enqueue(
-                animeTitle, "Episode " + ep.getLabel(), quality, language, hlsUrl
+                animeTitle, label, quality, language, hlsUrl
         );
         adapter.notifyDataSetChanged();
 
@@ -228,7 +237,7 @@ public class DetailActivity extends BaseActivity {
             startService(intent);
         }
 
-        handler.post(() -> Toast.makeText(this, "Queued: Episode " + ep.getLabel(), Toast.LENGTH_SHORT).show());
+        handler.post(() -> Toast.makeText(this, "Queued: " + label, Toast.LENGTH_SHORT).show());
     }
 
     private void downloadAllEpisodes() {
