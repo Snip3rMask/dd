@@ -7,26 +7,36 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class DownloadEntryStore {
-    private static final String PREF = "anidb_downloads";
+    private static final String PREF = "mirudl_downloads";
     private static final String KEY = "entries";
 
     public static final class Entry {
         public String uri;
+        public String filePath;
         public String title;
         public String parent;
         public long size;
         public long completedAt;
 
         public String key() {
-            return uri != null ? uri : title;
+            if (uri != null && !uri.isEmpty()) return uri;
+            return filePath != null ? filePath : title;
         }
 
         public String parentName() {
-            return (parent != null && !parent.trim().isEmpty()) ? parent : "AniDB";
+            return (parent != null && !parent.trim().isEmpty()) ? parent : "MiruDL";
         }
+    }
+
+    public enum DeleteScope {
+        RECORD_ONLY,
+        FILE_ONLY,
+        RECORD_AND_FILE
     }
 
     private DownloadEntryStore() {}
@@ -41,6 +51,7 @@ public final class DownloadEntryStore {
                 JSONObject json = arr.getJSONObject(i);
                 Entry e = new Entry();
                 e.uri = json.optString("uri", "");
+                e.filePath = json.optString("filePath", "");
                 e.title = json.optString("title", "");
                 e.parent = json.optString("parent", "");
                 e.size = json.optLong("size", 0);
@@ -80,7 +91,7 @@ public final class DownloadEntryStore {
 
     public static void removeAll(Context context, List<Entry> entries) {
         if (entries == null || entries.isEmpty()) return;
-        java.util.Set<String> keys = new java.util.HashSet<>();
+        Set<String> keys = new HashSet<>();
         for (Entry e : entries) keys.add(e.key());
         List<Entry> out = new ArrayList<>();
         for (Entry e : all(context))
@@ -93,9 +104,10 @@ public final class DownloadEntryStore {
         for (Entry e : items) {
             JSONObject json = new JSONObject();
             try {
-                json.put("uri", e.uri);
-                json.put("title", e.title);
-                json.put("parent", e.parent);
+                json.put("uri", e.uri != null ? e.uri : "");
+                json.put("filePath", e.filePath != null ? e.filePath : "");
+                json.put("title", e.title != null ? e.title : "");
+                json.put("parent", e.parent != null ? e.parent : "");
                 json.put("size", e.size);
                 json.put("completedAt", e.completedAt);
                 arr.put(json);

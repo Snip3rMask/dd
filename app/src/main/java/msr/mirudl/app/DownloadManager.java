@@ -27,6 +27,9 @@ public final class DownloadManager {
         public volatile boolean finished;
         public volatile String error;
         public String outputUri;
+        // Multi-episode support
+        public volatile int currentIndex;
+        public volatile int totalEpisodes;
 
         public Job(String animeTitle, String episodeTitle, String quality,
                    String language, String hlsUrl) {
@@ -37,6 +40,8 @@ public final class DownloadManager {
             this.language = language;
             this.hlsUrl = hlsUrl;
             this.status = STATUS_QUEUED;
+            this.currentIndex = 1;
+            this.totalEpisodes = 1;
         }
     }
 
@@ -61,6 +66,14 @@ public final class DownloadManager {
 
     public static synchronized void update(Job job, int percent, String status) {
         if (job == null) return;
+        job.percent = percent;
+        job.status = status;
+    }
+
+    public static synchronized void updateMulti(Job job, int currentIndex, String episode, int percent, String status) {
+        if (job == null) return;
+        job.currentIndex = currentIndex;
+        job.episodeTitle = episode;
         job.percent = percent;
         job.status = status;
     }

@@ -14,6 +14,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final Context context;
@@ -26,6 +27,9 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         default void onCancel(DownloadManager.Job job) {}
         default void onClick(DownloadEntryStore.Entry entry) {}
         default void onDelete(DownloadEntryStore.Entry entry) {}
+        default void onSelectionToggle(DownloadEntryStore.Entry entry) {}
+        default boolean isSelected(DownloadEntryStore.Entry entry) { return false; }
+        default void onGroupDelete(String groupName) {}
     }
 
     public DownloadAdapter(Context context, boolean showActive,
@@ -76,8 +80,9 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             ActiveHolder ah = (ActiveHolder) h;
             if (pos < jobs.size()) {
                 DownloadManager.Job job = jobs.get(pos);
-                ah.title.setText(job.episodeTitle != null ? job.episodeTitle : job.animeTitle);
-                ah.status.setText(job.status);
+                String title = job.episodeTitle != null ? job.episodeTitle : job.animeTitle;
+                ah.title.setText(title != null ? title : "");
+                ah.status.setText(job.status != null ? job.status : "");
                 ah.progress.setProgress(Math.max(0, Math.min(100, job.percent)));
                 ah.cancelBtn.setOnClickListener(v -> {
                     if (listener != null) listener.onCancel(job);
@@ -87,13 +92,25 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             CompletedHolder ch = (CompletedHolder) h;
             if (pos < entries.size()) {
                 DownloadEntryStore.Entry entry = entries.get(pos);
-                ch.title.setText(entry.title);
+                ch.title.setText(entry.title != null ? entry.title : "");
                 ch.parent.setText(entry.parentName());
                 ch.size.setText(formatSize(entry.size));
                 ch.date.setText(formatDate(entry.completedAt));
+
                 ch.itemView.setOnClickListener(v -> {
                     if (listener != null) listener.onClick(entry);
                 });
+
+                if (ch.checkIcon != null) {
+                    boolean selected = listener != null && listener.isSelected(entry);
+                    ch.checkIcon.setImageResource(selected
+                            ? android.R.drawable.checkbox_on_background
+                            : android.R.drawable.checkbox_off_background);
+                    ch.checkIcon.setOnClickListener(v -> {
+                        if (listener != null) listener.onSelectionToggle(entry);
+                    });
+                }
+
                 ch.deleteBtn.setOnClickListener(v -> {
                     if (listener != null) listener.onDelete(entry);
                 });
@@ -104,12 +121,13 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private String formatSize(long bytes) {
         if (bytes < 1024) return bytes + " B";
         if (bytes < 1024 * 1024) return (bytes / 1024) + " KB";
-        if (bytes < 1024 * 1024 * 1024) return String.format("%.1f MB", bytes / (1024.0 * 1024.0));
-        return String.format("%.1f GB", bytes / (1024.0 * 1024.0 * 1024.0));
+        if (bytes < 1024 * 1024 * 1024)
+            return String.format(Locale.US, "%.1f MB", bytes / (1024.0 * 1024.0));
+        return String.format(Locale.US, "%.1f GB", bytes / (1024.0 * 1024.0 * 1024.0));
     }
 
     private String formatDate(long millis) {
-        return new SimpleDateFormat("MMM dd, yyyy", java.util.Locale.US).format(new Date(millis));
+        return new SimpleDateFormat("MMM dd, yyyy", Locale.US).format(new Date(millis));
     }
 
     static class ActiveHolder extends RecyclerView.ViewHolder {
@@ -127,7 +145,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     static class CompletedHolder extends RecyclerView.ViewHolder {
         TextView title, parent, size, date;
-        ImageView deleteBtn;
+        ImageView deleteBtn, checkIcon;
         CompletedHolder(View v) {
             super(v);
             title = v.findViewById(R.id.dl_title);
@@ -135,6 +153,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             size = v.findViewById(R.id.dl_size);
             date = v.findViewById(R.id.dl_date);
             deleteBtn = v.findViewById(R.id.dl_delete);
+            checkIcon = v.findViewById(R.id.dl_check);
         }
     }
 }

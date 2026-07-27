@@ -1,12 +1,12 @@
 package msr.mirudl.app;
 
-import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 
 import androidx.documentfile.provider.DocumentFile;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,6 +25,8 @@ import okhttp3.Response;
 public final class HlsDownloader {
     public static final int DEFAULT_PARALLEL = 16;
     private static final int MAX_PARALLEL = 32;
+    private static final int BUFFER_SIZE = 64 * 1024; // 64KB buffer
+
     private static final OkHttpClient CLIENT = new OkHttpClient.Builder()
             .connectTimeout(20, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
@@ -40,42 +42,85 @@ public final class HlsDownloader {
         boolean isCancelled();
     }
 
+    public static List<VideoSource> qualities(String masterUrl) throws Exception {
+        String master = getText(masterUrl);
+        List<VideoSource> variants = new ArrayList<>();
+        String pendingInf = null;
+        for (String raw : master.split("\\r?\\n")) {
+            String line = raw.trim();
+            if (line.startsWith("#EXT-X-STREAM-INF")) {
+                pendingInf = line;
+            } else if (pendingInf != null && !line.isEmpty() && !line.startsWith("#")) {
+                variants.add(new VideoSource(labelFor(pendingInf), resolve(line, masterUrl)));
+                pendingInf = null;
+            }
+        }
+        if (variants.isEmpty()) {
+            variants.add(new VideoSource("Auto", masterUrl));
+        }
+        return variants;
+    }
+
+    private static String labelFor(String infLine) {
+        int res = infLine.indexOf("RESOLUTION=");
+        if (res >= 0) {
+            int x = infLine.indexOf('x', res);
+            if (x > res) {
+                int end = x + 1;
+                while (end < infLine.length() && Character.isDigit(infLine.charAt(end))) end++;
+                if (end > x + 1) return infLine.substring(x + 1, end) + "p";
+            }
+        }
+        int bw = parseBandwidth(infLine);
+        if (bw >= 4500000) return "1080p";
+        if (bw >= 2200000) return "720p";
+        if (bw >= 1000000) return "480p";
+        if (bw > 0) return "360p";
+        return "Auto";
+    }
+
+    private static int parseBandwidth(String line) {
+        int idx = line.indexOf("BANDWIDTH=");
+        if (idx < 0) return 0;
+        idx += "BANDWIDTH=".length();
+        int end = idx;
+        while (end < line.length() && Character.isDigit(line.charAt(end))) end++;
+        try {
+            return Integer.parseInt(line.substring(idx, end));
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
     public static String download(Context context, String playlistUrl, String fileName,
                                   int parallelSegments, ProgressListener progress, CancelCheck cancel)
             throws Exception {
 
-        // Resolve master playlist if needed
         String master = getText(playlistUrl);
         if (master.contains("#EXT-X-STREAM-INF")) {
-            List<VideoSource> variants = parseMasterPlaylist(master, playlistUrl);
+            List<VideoSource> variants = qualities(playlistUrl);
             if (!variants.isEmpty()) {
                 playlistUrl = variants.get(0).url;
                 master = getText(playlistUrl);
             }
         }
 
-        // Check encryption
         if (master.contains("#EXT-X-KEY")) {
             throw new IOException("Encrypted streams are not supported");
         }
 
-        // Parse segments
         List<String> segments = parseSegments(master, playlistUrl);
         if (segments.isEmpty()) {
             throw new IOException("No HLS segments found");
         }
 
-        // Init map
         String mapUrl = parseInitMap(master, playlistUrl);
 
-        // Create temp dir
         File tempDir = new File(context.getCacheDir(), "hls_" + System.currentTimeMillis());
         if (!tempDir.mkdirs()) throw new IOException("Cannot create temp dir");
 
-        // Download segments in parallel
         downloadSegments(segments, tempDir, clampParallel(parallelSegments), progress, cancel);
 
-        // Determine output
         String cleanName = sanitize(fileName);
         String animeDir = extractParent(fileName);
         Uri treeUri = getDownloadDir(context);
@@ -86,20 +131,14 @@ public final class HlsDownloader {
         if (out == null) throw new IOException("Cannot open output stream");
 
         try {
-            // Write init segment
-            if (mapUrl != null) {
-                writeUrlToStream(mapUrl, out);
-            }
-            // Merge segments
+            if (mapUrl != null) writeUrlToStream(mapUrl, out);
             for (int i = 0; i < segments.size(); i++) {
                 File segFile = new File(tempDir, "seg_" + i + ".ts");
                 if (segFile.exists()) {
-                    try (InputStream in = new java.io.FileInputStream(segFile)) {
-                        byte[] buf = new byte[8192];
+                    try (InputStream in = new FileInputStream(segFile)) {
+                        byte[] buf = new byte[BUFFER_SIZE];
                         int read;
-                        while ((read = in.read(buf)) >= 0) {
-                            out.write(buf, 0, read);
-                        }
+                        while ((read = in.read(buf)) >= 0) out.write(buf, 0, read);
                     }
                 }
             }
@@ -107,10 +146,8 @@ public final class HlsDownloader {
             out.close();
         }
 
-        // Cleanup
         deleteRecursive(tempDir);
 
-        // Record download
         long size = outFile.length();
         saveDownloadEntry(context, outFile.getUri().toString(), cleanName, animeDir, size);
 
@@ -134,37 +171,20 @@ public final class HlsDownloader {
                         fos.write(data);
                     }
                 } catch (Exception ignored) {}
-                int d = done.incrementAndGet();
+                int current = done.incrementAndGet();
                 if (progress != null) {
-                    progress.onProgress(d * 100 / total, d, total);
+                    progress.onProgress(current * 100 / total, current, total);
                 }
             });
         }
 
         executor.shutdown();
         try {
-            executor.awaitTermination(30, TimeUnit.MINUTES);
+            executor.awaitTermination(1, TimeUnit.HOURS);
         } catch (InterruptedException ignored) {}
     }
 
-    // ============ PARSING ============
-
-    private static List<VideoSource> parseMasterPlaylist(String master, String baseUrl) {
-        List<VideoSource> list = new ArrayList<>();
-        String pending = null;
-        for (String raw : master.split("\\r?\\n")) {
-            String line = raw.trim();
-            if (line.startsWith("#EXT-X-STREAM-INF")) {
-                pending = line;
-            } else if (pending != null && !line.isEmpty() && !line.startsWith("#")) {
-                String res = extractRes(pending);
-                String url = resolve(line, baseUrl);
-                list.add(new VideoSource(res, url));
-                pending = null;
-            }
-        }
-        return list;
-    }
+    // ============ PLAYLIST PARSING ============
 
     private static List<String> parseSegments(String playlist, String baseUrl) {
         List<String> segments = new ArrayList<>();
@@ -177,21 +197,42 @@ public final class HlsDownloader {
         return segments;
     }
 
+    private static List<VideoSource> parseMasterPlaylist(String master, String baseUrl) {
+        List<VideoSource> variants = new ArrayList<>();
+        String pendingInf = null;
+        for (String raw : master.split("\\r?\\n")) {
+            String line = raw.trim();
+            if (line.startsWith("#EXT-X-STREAM-INF")) {
+                pendingInf = line;
+            } else if (pendingInf != null && !line.isEmpty() && !line.startsWith("#")) {
+                String quality = extractRes(pendingInf);
+                variants.add(new VideoSource(quality, resolve(line, baseUrl)));
+                pendingInf = null;
+            }
+        }
+        return variants;
+    }
+
     private static String parseInitMap(String playlist, String baseUrl) {
-        int idx = playlist.indexOf("#EXT-X-MAP:");
-        if (idx < 0) return null;
-        int uriIdx = playlist.indexOf("URI=\"", idx);
-        if (uriIdx < 0) return null;
-        int end = playlist.indexOf("\"", uriIdx + 5);
-        if (end < 0) return null;
-        return resolve(playlist.substring(uriIdx + 5, end), baseUrl);
+        for (String raw : playlist.split("\\r?\\n")) {
+            String line = raw.trim();
+            if (line.startsWith("#EXT-X-MAP")) {
+                int urlIdx = line.indexOf("URI=\"");
+                if (urlIdx >= 0) {
+                    int urlEnd = line.indexOf("\"", urlIdx + 5);
+                    if (urlEnd > 0) {
+                        return resolve(line.substring(urlIdx + 5, urlEnd), baseUrl);
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     // ============ HTTP ============
 
     private static String getText(String url) throws IOException {
-        Request req = new Request.Builder()
-                .url(url)
+        Request req = new Request.Builder().url(url)
                 .header("User-Agent", "Mozilla/5.0")
                 .header("Referer", "https://anidb.app/")
                 .build();
@@ -220,7 +261,7 @@ public final class HlsDownloader {
         try (Response resp = CLIENT.newCall(req).execute()) {
             if (resp.isSuccessful() && resp.body() != null) {
                 try (InputStream in = resp.body().byteStream()) {
-                    byte[] buf = new byte[8192];
+                    byte[] buf = new byte[BUFFER_SIZE];
                     int read;
                     while ((read = in.read(buf)) >= 0) out.write(buf, 0, read);
                 }
@@ -240,7 +281,11 @@ public final class HlsDownloader {
         if (root == null || !root.canWrite())
             throw new IOException("Cannot write to download folder");
 
-        DocumentFile anime = findOrCreateDir(root, sanitize(folderName));
+        // Create "MiruDL Downloads" subfolder like Anifux does
+        DocumentFile mirudlRoot = findOrCreateDir(root, "MiruDL Downloads");
+        if (mirudlRoot == null) throw new IOException("Cannot create root folder");
+
+        DocumentFile anime = findOrCreateDir(mirudlRoot, sanitize(folderName));
         if (anime == null) throw new IOException("Cannot create anime folder");
 
         DocumentFile existing = anime.findFile(fileName);
@@ -291,15 +336,6 @@ public final class HlsDownloader {
         if (fileName == null) return "Unknown";
         int idx = fileName.indexOf(" - Episode");
         return idx > 0 ? fileName.substring(0, idx) : fileName;
-    }
-
-    private static String extractRes(String infLine) {
-        int idx = infLine.indexOf("RESOLUTION=");
-        if (idx >= 0) {
-            int end = infLine.indexOf(",", idx);
-            return end > 0 ? infLine.substring(idx + 11, end) : infLine.substring(idx + 11);
-        }
-        return "Auto";
     }
 
     private static String resolve(String value, String base) {

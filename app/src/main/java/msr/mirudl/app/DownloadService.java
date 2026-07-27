@@ -4,15 +4,15 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 import android.app.NotificationManager;
 
 import androidx.core.app.NotificationCompat;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class DownloadService extends Service {
     private static final String ACTION_START = "start";
@@ -20,12 +20,13 @@ public class DownloadService extends Service {
     private static final String EXTRA_JOB_ID = "jobId";
     private static final String EXTRA_JOBS = "jobs";
 
-    private final ExecutorService worker = Executors.newSingleThreadExecutor();
+    private final java.util.concurrent.ExecutorService worker =
+            java.util.concurrent.Executors.newSingleThreadExecutor();
 
     public static Intent startIntent(Context context, List<DownloadManager.Job> jobs) {
         Intent intent = new Intent(context, DownloadService.class);
         intent.setAction(ACTION_START);
-        intent.putExtra(EXTRA_JOBS, new java.util.ArrayList<>(jobs));
+        intent.putExtra(EXTRA_JOBS, new ArrayList<>(jobs));
         return intent;
     }
 
@@ -88,13 +89,11 @@ public class DownloadService extends Service {
             DownloadManager.update(job, 0, DownloadManager.STATUS_DOWNLOADING);
 
             try {
-                // Resolve HLS from embed if needed
                 String playUrl = job.hlsUrl;
-                if (playUrl.contains("/embed/")) {
+                if (playUrl != null && playUrl.contains("/embed/")) {
                     playUrl = AniDbApi.getInstance().resolveHlsFromEmbed(playUrl);
                 }
 
-                // Download
                 String output = HlsDownloader.download(
                         this, playUrl,
                         job.animeTitle + " - " + job.episodeTitle,
@@ -123,11 +122,13 @@ public class DownloadService extends Service {
     }
 
     private void notifyProgress(DownloadManager.Job job) {
-        String text = job.episodeTitle + " - " + job.percent + "%";
+        String text = job.episodeTitle != null ? job.episodeTitle : "";
+        if (text.isEmpty()) text = job.animeTitle;
+        text += " - " + job.percent + "%";
         if (job.finished) {
             text = job.status.equals(DownloadManager.STATUS_COMPLETED)
-                    ? "Completed: " + job.episodeTitle
-                    : job.status + ": " + job.episodeTitle;
+                    ? "Completed: " + (job.episodeTitle != null ? job.episodeTitle : "")
+                    : (job.status != null ? job.status : "Error") + ": " + (job.episodeTitle != null ? job.episodeTitle : "");
         }
 
         NotificationManager mgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
@@ -139,7 +140,7 @@ public class DownloadService extends Service {
     private void notifyComplete() {
         int completed = 0, failed = 0;
         for (DownloadManager.Job j : DownloadManager.snapshot()) {
-            if (j.status.equals(DownloadManager.STATUS_COMPLETED)) completed++;
+            if (DownloadManager.STATUS_COMPLETED.equals(j.status)) completed++;
             else if (j.finished) failed++;
         }
         String text = "Done: " + completed + " done";
@@ -156,7 +157,7 @@ public class DownloadService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0));
 
         NotificationCompat.Builder b = new NotificationCompat.Builder(this, MiruDLApp.CHANNEL_DOWNLOADS)
-                .setSmallIcon(R.drawable.ic_notification)
+                .setSmallIcon(android.R.drawable.stat_sys_download)
                 .setContentTitle("MiruDL")
                 .setContentText(text)
                 .setContentIntent(pi)
@@ -165,10 +166,22 @@ public class DownloadService extends Service {
 
         if (!done) {
             b.setProgress(100, Math.max(0, Math.min(100, progress)), false);
+            // Add cancel action in notification like Anifux
+            Intent cancelIntent = cancelIntent(this, getFirstActiveJobId());
+            PendingIntent cancelPi = PendingIntent.getService(this, 1002, cancelIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0));
+            b.addAction(android.R.drawable.ic_menu_close_clear_cancel, "Cancel", cancelPi);
         } else {
             b.setProgress(0, 0, false);
         }
 
         return b.build();
+    }
+
+    private String getFirstActiveJobId() {
+        for (DownloadManager.Job j : DownloadManager.snapshot()) {
+            if (!j.finished) return j.id;
+        }
+        return "";
     }
 }
