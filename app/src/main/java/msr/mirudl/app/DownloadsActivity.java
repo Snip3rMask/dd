@@ -225,12 +225,11 @@ public class DownloadsActivity extends BaseActivity {
         }
     }
 
-    private void showDeleteDownloadDialog(DownloadEntry dlEntry) {
+        private void showDeleteDownloadDialog(DownloadEntry dlEntry) {
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(dp(24), dp(24), dp(24), dp(20));
 
-        // Title row with icon
         LinearLayout titleRow = new LinearLayout(this);
         titleRow.setOrientation(LinearLayout.HORIZONTAL);
         titleRow.setGravity(Gravity.CENTER_VERTICAL);
@@ -258,7 +257,6 @@ public class DownloadsActivity extends BaseActivity {
         titleRow.addView(title, tLp);
         box.addView(titleRow, new LinearLayout.LayoutParams(-1, -2));
 
-        // Episode name
         TextView epName = new TextView(this);
         epName.setText(displayName);
         epName.setTextColor(0xFF6B687C);
@@ -269,7 +267,7 @@ public class DownloadsActivity extends BaseActivity {
         enLp.setMargins(dp(58), dp(4), 0, dp(20));
         box.addView(epName, enLp);
 
-        // Delete file button
+        // Delete button
         TextView deleteBtn = new TextView(this);
         deleteBtn.setText("Delete file permanently");
         deleteBtn.setTextColor(0xFFF1F0F7);
@@ -282,7 +280,36 @@ public class DownloadsActivity extends BaseActivity {
         deleteBtn.setBackground(delBg);
         deleteBtn.setLayoutParams(new LinearLayout.LayoutParams(-1, dp(50)));
         box.addView(deleteBtn);
+
+        // Remove from history button
+        TextView removeBtn = new TextView(this);
+        removeBtn.setText("Remove from history only");
+        removeBtn.setTextColor(0xFFF1F0F7);
+        removeBtn.setTextSize(13);
+        removeBtn.setTypeface(null, Typeface.BOLD);
+        removeBtn.setGravity(Gravity.CENTER);
+        GradientDrawable remBg = new GradientDrawable();
+        remBg.setCornerRadius(dp(12));
+        remBg.setColor(0xFF22232D);
+        removeBtn.setBackground(remBg);
+        LinearLayout.LayoutParams remLp = new LinearLayout.LayoutParams(-1, dp(48));
+        remLp.setMargins(0, dp(10), 0, 0);
         box.addView(removeBtn, remLp);
+
+        // Cancel button
+        TextView cancelBtn = new TextView(this);
+        cancelBtn.setText("Cancel");
+        cancelBtn.setTextColor(0xFF6B687C);
+        cancelBtn.setTextSize(13);
+        cancelBtn.setTypeface(null, Typeface.BOLD);
+        cancelBtn.setGravity(Gravity.CENTER);
+        GradientDrawable canBg = new GradientDrawable();
+        canBg.setCornerRadius(dp(12));
+        canBg.setColor(0x00000000);
+        canBg.setStroke(dp(1), 0xFF2E2F3D);
+        cancelBtn.setBackground(canBg);
+        LinearLayout.LayoutParams canLp = new LinearLayout.LayoutParams(-1, dp(48));
+        canLp.setMargins(0, dp(10), 0, 0);
         box.addView(cancelBtn, canLp);
 
         AlertDialog dialog = new AlertDialog.Builder(this).setView(box).create();
@@ -292,7 +319,6 @@ public class DownloadsActivity extends BaseActivity {
         }
         dialog.show();
 
-        // Set click listeners after dialog is initialized
         deleteBtn.setOnClickListener(v -> {
             dlEntry.deleteFileAndRecord(this);
             dialog.dismiss();
@@ -305,8 +331,7 @@ public class DownloadsActivity extends BaseActivity {
         });
         cancelBtn.setOnClickListener(v -> dialog.dismiss());
     }
-
-    private int dp(int dp) {
+private int dp(int dp) {
         return (int) (dp * getResources().getDisplayMetrics().density);
     }
 }
