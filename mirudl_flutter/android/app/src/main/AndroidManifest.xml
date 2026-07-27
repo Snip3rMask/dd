@@ -46,14 +46,14 @@
             android:exported="false" />
 
         <!-- flutter_background_service foreground service (Android 14+ requires foregroundServiceType).
-             NOTE: class name corrected to match the actual service registered by the
-             flutter_background_service plugin — the previous name did not match, so this
-             override had no effect. -->
+             The plugin's merged manifest already declares this service; we override the
+             foregroundServiceType attribute here. exported must match the plugin's value
+             (true) to avoid manifest merger conflicts. -->
         <service
             android:name="id.flutter.flutter_background_service.BackgroundService"
             android:foregroundServiceType="dataSync"
-            tools:replace="android:foregroundServiceType"
-            android:exported="false" />
+            tools:replace="android:foregroundServiceType,android:exported"
+            android:exported="true" />
 
         <meta-data
             android:name="flutterEmbedding"
