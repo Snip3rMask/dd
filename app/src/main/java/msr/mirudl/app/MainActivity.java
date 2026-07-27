@@ -1,5 +1,6 @@
 package msr.mirudl.app;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -742,6 +743,13 @@ public class MainActivity extends BaseActivity {
         closeLp.setMargins(0, dp(16), 0, 0);
         closeBtn.setLayoutParams(closeLp);
         box.addView(closeBtn);
+
+        AlertDialog dialog = new AlertDialog.Builder(this).setView(box).create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            dialog.getWindow().setWindowAnimations(android.R.style.Animation_Dialog);
+        }
+        dialog.show();
         closeBtn.setOnClickListener(v -> dialog.dismiss());
     }
 
