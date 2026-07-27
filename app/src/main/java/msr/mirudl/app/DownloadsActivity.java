@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.Gravity;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -117,15 +119,89 @@ public class DownloadsActivity extends BaseActivity {
     private void clearFinished() {
         List<DownloadEntryStore.Entry> entries = DownloadEntryStore.all(this);
         if (!entries.isEmpty()) {
-            new AlertDialog.Builder(this)
-                    .setTitle("Clear History")
-                    .setMessage("Remove all download history?")
-                    .setPositiveButton("Clear", (d, w) -> {
-                        DownloadEntryStore.removeAll(this, entries);
-                        refresh();
-                    })
-                    .setNegativeButton("Cancel", null)
-                    .show();
+            // Modern alert dialog
+            android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+            LinearLayout box = new LinearLayout(this);
+            box.setOrientation(LinearLayout.VERTICAL);
+            box.setPadding(dp(24), dp(24), dp(24), dp(20));
+
+            // Title row with icon
+            LinearLayout titleRow = new LinearLayout(this);
+            titleRow.setOrientation(LinearLayout.HORIZONTAL);
+            titleRow.setGravity(Gravity.CENTER_VERTICAL);
+
+            ImageView icon = new ImageView(this);
+            icon.setImageResource(R.drawable.ic_delete);
+            icon.setColorFilter(0xFFF87171);
+            icon.setPadding(dp(8), dp(8), dp(8), dp(8));
+            GradientDrawable iconBg = new GradientDrawable();
+            iconBg.setShape(GradientDrawable.OVAL);
+            iconBg.setColor(0x22F87171);
+            icon.setBackground(iconBg);
+            titleRow.addView(icon, new LinearLayout.LayoutParams(dp(44), dp(44)));
+
+            TextView title = new TextView(this);
+            title.setText("Clear History");
+            title.setTextColor(0xFFF1F0F7);
+            title.setTextSize(17);
+            title.setTypeface(null, Typeface.BOLD);
+            LinearLayout.LayoutParams tLp = new LinearLayout.LayoutParams(-1, -2);
+            tLp.setMargins(dp(14), 0, 0, 0);
+            titleRow.addView(title, tLp);
+            box.addView(titleRow, new LinearLayout.LayoutParams(-1, -2));
+
+            TextView msg = new TextView(this);
+            msg.setText("Remove all download history? This won't delete the actual files.");
+            msg.setTextColor(0xFF6B687C);
+            msg.setTextSize(13);
+            msg.setLineSpacing(dp(3), 1f);
+            LinearLayout.LayoutParams msgLp = new LinearLayout.LayoutParams(-1, -2);
+            msgLp.setMargins(0, dp(16), 0, dp(22));
+            box.addView(msg, msgLp);
+
+            // Clear button
+            TextView clearBtn = new TextView(this);
+            clearBtn.setText("Clear History");
+            clearBtn.setTextColor(0xFFF1F0F7);
+            clearBtn.setTextSize(14);
+            clearBtn.setTypeface(null, Typeface.BOLD);
+            clearBtn.setGravity(Gravity.CENTER);
+            GradientDrawable clearBg = new GradientDrawable();
+            clearBg.setCornerRadius(dp(12));
+            clearBg.setColor(0xFFF87171);
+            clearBtn.setBackground(clearBg);
+            clearBtn.setLayoutParams(new LinearLayout.LayoutParams(-1, dp(50)));
+            box.addView(clearBtn);
+            clearBtn.setOnClickListener(v -> {
+                DownloadEntryStore.removeAll(DownloadsActivity.this, entries);
+                DownloadManager.removeFinished();
+                dialog.dismiss();
+                refresh();
+            });
+
+            // Cancel
+            TextView cancelBtn = new TextView(this);
+            cancelBtn.setText("Cancel");
+            cancelBtn.setTextColor(0xFF6B687C);
+            cancelBtn.setTextSize(13);
+            cancelBtn.setTypeface(null, Typeface.BOLD);
+            cancelBtn.setGravity(Gravity.CENTER);
+            GradientDrawable canBg = new GradientDrawable();
+            canBg.setCornerRadius(dp(12));
+            canBg.setColor(0x00000000);
+            canBg.setStroke(dp(1), 0xFF2E2F3D);
+            cancelBtn.setBackground(canBg);
+            LinearLayout.LayoutParams canLp = new LinearLayout.LayoutParams(-1, dp(48));
+            canLp.setMargins(0, dp(10), 0, 0);
+            box.addView(cancelBtn, canLp);
+            cancelBtn.setOnClickListener(v -> dialog.dismiss());
+
+            android.app.AlertDialog dialog = builder.setView(box).create();
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+                dialog.getWindow().setWindowAnimations(android.R.style.Animation_Dialog);
+            }
+            dialog.show();
         }
         DownloadManager.removeFinished();
         refresh();
@@ -145,40 +221,61 @@ public class DownloadsActivity extends BaseActivity {
     }
 
     private void showDeleteDownloadDialog(DownloadEntry dlEntry) {
-        android.widget.LinearLayout box = new android.widget.LinearLayout(this);
-        box.setOrientation(android.widget.LinearLayout.VERTICAL);
-        box.setPadding(dp(22), dp(22), dp(22), dp(22));
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(24), dp(24), dp(24), dp(20));
 
-        android.widget.TextView title = new android.widget.TextView(this);
-        title.setText("Delete " + dlEntry.title + "?");
-        title.setTextColor(getColor(R.color.text_primary));
-        title.setTextSize(18);
-        title.setTypeface(null, android.graphics.Typeface.BOLD);
-        box.addView(title, new android.widget.LinearLayout.LayoutParams(-1, -2));
+        // Title row with icon
+        LinearLayout titleRow = new LinearLayout(this);
+        titleRow.setOrientation(LinearLayout.HORIZONTAL);
+        titleRow.setGravity(Gravity.CENTER_VERTICAL);
 
-        android.widget.TextView message = new android.widget.TextView(this);
-        message.setText("Remove from history keeps the file on your device. Delete file removes it permanently.");
-        message.setTextColor(getColor(R.color.text_secondary));
-        message.setTextSize(14);
-        message.setLineSpacing(dp(3), 1f);
-        android.widget.LinearLayout.LayoutParams msgLp = new android.widget.LinearLayout.LayoutParams(-1, -2);
-        msgLp.setMargins(0, dp(8), 0, dp(22));
-        box.addView(message, msgLp);
+        ImageView icon = new ImageView(this);
+        icon.setImageResource(R.drawable.ic_delete);
+        icon.setColorFilter(0xFFF87171);
+        icon.setPadding(dp(8), dp(8), dp(8), dp(8));
+        GradientDrawable iconBg = new GradientDrawable();
+        iconBg.setShape(GradientDrawable.OVAL);
+        iconBg.setColor(0x22F87171);
+        icon.setBackground(iconBg);
+        titleRow.addView(icon, new LinearLayout.LayoutParams(dp(44), dp(44)));
 
-        AlertDialog dialog = new AlertDialog.Builder(this).setView(box).create();
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        }
-        dialog.show();
+        String displayName = dlEntry.title != null ? dlEntry.title : "";
+        if (displayName.startsWith("Episode ")) displayName = displayName.substring(8);
 
-        android.widget.TextView deleteBtn = new android.widget.TextView(this);
-        deleteBtn.setText("Delete file");
-        deleteBtn.setTextColor(getColor(R.color.on_primary));
-        deleteBtn.setTextSize(15);
-        deleteBtn.setTypeface(null, android.graphics.Typeface.BOLD);
-        deleteBtn.setGravity(android.view.Gravity.CENTER);
-        deleteBtn.setBackground(getDrawable(R.drawable.btn_primary));
-        deleteBtn.setLayoutParams(new android.widget.LinearLayout.LayoutParams(-1, dp(50)));
+        TextView title = new TextView(this);
+        title.setText("Delete download?");
+        title.setTextColor(0xFFF1F0F7);
+        title.setTextSize(17);
+        title.setTypeface(null, Typeface.BOLD);
+        LinearLayout.LayoutParams tLp = new LinearLayout.LayoutParams(-1, -2);
+        tLp.setMargins(dp(14), 0, 0, 0);
+        titleRow.addView(title, tLp);
+        box.addView(titleRow, new LinearLayout.LayoutParams(-1, -2));
+
+        // Episode name
+        TextView epName = new TextView(this);
+        epName.setText(displayName);
+        epName.setTextColor(0xFF6B687C);
+        epName.setTextSize(13);
+        epName.setMaxLines(2);
+        epName.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams enLp = new LinearLayout.LayoutParams(-1, -2);
+        enLp.setMargins(dp(58), dp(4), 0, dp(20));
+        box.addView(epName, enLp);
+
+        // Delete file button
+        TextView deleteBtn = new TextView(this);
+        deleteBtn.setText("Delete file permanently");
+        deleteBtn.setTextColor(0xFFF1F0F7);
+        deleteBtn.setTextSize(14);
+        deleteBtn.setTypeface(null, Typeface.BOLD);
+        deleteBtn.setGravity(Gravity.CENTER);
+        GradientDrawable delBg = new GradientDrawable();
+        delBg.setCornerRadius(dp(12));
+        delBg.setColor(0xFFF87171);
+        deleteBtn.setBackground(delBg);
+        deleteBtn.setLayoutParams(new LinearLayout.LayoutParams(-1, dp(50)));
         box.addView(deleteBtn);
         deleteBtn.setOnClickListener(v -> {
             dlEntry.deleteFileAndRecord(this);
@@ -186,14 +283,18 @@ public class DownloadsActivity extends BaseActivity {
             refresh();
         });
 
-        android.widget.TextView removeBtn = new android.widget.TextView(this);
+        // Remove from history
+        TextView removeBtn = new TextView(this);
         removeBtn.setText("Remove from history only");
-        removeBtn.setTextColor(getColor(R.color.text_primary));
-        removeBtn.setTextSize(14);
-        removeBtn.setTypeface(null, android.graphics.Typeface.BOLD);
-        removeBtn.setGravity(android.view.Gravity.CENTER);
-        removeBtn.setBackground(UiHelper.rounded(getColor(R.color.surface_variant), dp(100)));
-        android.widget.LinearLayout.LayoutParams remLp = new android.widget.LinearLayout.LayoutParams(-1, dp(50));
+        removeBtn.setTextColor(0xFFF1F0F7);
+        removeBtn.setTextSize(13);
+        removeBtn.setTypeface(null, Typeface.BOLD);
+        removeBtn.setGravity(Gravity.CENTER);
+        GradientDrawable remBg = new GradientDrawable();
+        remBg.setCornerRadius(dp(12));
+        remBg.setColor(0xFF22232D);
+        removeBtn.setBackground(remBg);
+        LinearLayout.LayoutParams remLp = new LinearLayout.LayoutParams(-1, dp(48));
         remLp.setMargins(0, dp(10), 0, 0);
         box.addView(removeBtn, remLp);
         removeBtn.setOnClickListener(v -> {
@@ -202,17 +303,29 @@ public class DownloadsActivity extends BaseActivity {
             refresh();
         });
 
-        android.widget.TextView cancelBtn = new android.widget.TextView(this);
+        // Cancel
+        TextView cancelBtn = new TextView(this);
         cancelBtn.setText("Cancel");
-        cancelBtn.setTextColor(getColor(R.color.text_tertiary));
-        cancelBtn.setTextSize(14);
-        cancelBtn.setTypeface(null, android.graphics.Typeface.BOLD);
-        cancelBtn.setGravity(android.view.Gravity.CENTER);
-        cancelBtn.setBackground(UiHelper.rounded(getColor(R.color.surface_variant), dp(100)));
-        android.widget.LinearLayout.LayoutParams canLp = new android.widget.LinearLayout.LayoutParams(-1, dp(50));
+        cancelBtn.setTextColor(0xFF6B687C);
+        cancelBtn.setTextSize(13);
+        cancelBtn.setTypeface(null, Typeface.BOLD);
+        cancelBtn.setGravity(Gravity.CENTER);
+        GradientDrawable canBg = new GradientDrawable();
+        canBg.setCornerRadius(dp(12));
+        canBg.setColor(0x00000000);
+        canBg.setStroke(dp(1), 0xFF2E2F3D);
+        cancelBtn.setBackground(canBg);
+        LinearLayout.LayoutParams canLp = new LinearLayout.LayoutParams(-1, dp(48));
         canLp.setMargins(0, dp(10), 0, 0);
         box.addView(cancelBtn, canLp);
         cancelBtn.setOnClickListener(v -> dialog.dismiss());
+
+        AlertDialog dialog = new AlertDialog.Builder(this).setView(box).create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            dialog.getWindow().setWindowAnimations(android.R.style.Animation_Dialog);
+        }
+        dialog.show();
     }
 
     private int dp(int dp) {

@@ -59,7 +59,7 @@ public class SettingsActivity extends BaseActivity {
 
         int currentParallel = StorageSettings.getParallelSegments(this);
         parallelBar.setProgress(currentParallel);
-        parallelValue.setText(speedLabel(currentParallel));
+        parallelValue.setText(String.valueOf(currentParallel));
 
         parallelBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onStartTrackingTouch(SeekBar bar) {}
@@ -68,7 +68,7 @@ public class SettingsActivity extends BaseActivity {
             public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
                 if (fromUser) {
                     int val = Math.max(1, progress);
-                    parallelValue.setText(speedLabel(val));
+                    parallelValue.setText(String.valueOf(val));
                     StorageSettings.setParallelSegments(SettingsActivity.this, val);
                 }
             }

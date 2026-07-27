@@ -2,13 +2,16 @@ package msr.mirudl.app;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.graphics.drawable.GradientDrawable;
 import android.widget.Toast;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -72,21 +75,10 @@ public class DetailActivity extends BaseActivity {
                 return;
             }
             if (!StorageSettings.hasDownloadUri(this)) {
-                new AlertDialog.Builder(this)
-                        .setTitle("Select Download Folder")
-                        .setMessage("Please select a download folder first in Settings")
-                        .setPositiveButton("Open Settings", (d, w) ->
-                                startActivity(new Intent(this, SettingsActivity.class)))
-                        .setNegativeButton("Cancel", null)
-                        .show();
+                showFolderRequiredDialog();
                 return;
             }
-            new AlertDialog.Builder(this)
-                    .setTitle("Download All Episodes")
-                    .setMessage("Start downloading all " + episodes.size() + " episodes?")
-                    .setPositiveButton("Download All", (d, w) -> downloadAllEpisodes())
-                    .setNegativeButton("Cancel", null)
-                    .show();
+            showDownloadAllDialog();
         });
 
         adapter = new EpisodeAdapter(ep -> {
@@ -178,15 +170,169 @@ public class DetailActivity extends BaseActivity {
         });
     }
 
+    private void showFolderRequiredDialog() {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(24), dp(24), dp(24), dp(20));
+
+        LinearLayout titleRow = new LinearLayout(this);
+        titleRow.setOrientation(LinearLayout.HORIZONTAL);
+        titleRow.setGravity(Gravity.CENTER_VERTICAL);
+
+        ImageView icon = new ImageView(this);
+        icon.setImageResource(R.drawable.ic_folder);
+        icon.setColorFilter(0xFF38BDF8);
+        icon.setPadding(dp(8), dp(8), dp(8), dp(8));
+        GradientDrawable iconBg = new GradientDrawable();
+        iconBg.setShape(GradientDrawable.OVAL);
+        iconBg.setColor(0x2238BDF8);
+        icon.setBackground(iconBg);
+        titleRow.addView(icon, new LinearLayout.LayoutParams(dp(44), dp(44)));
+
+        TextView title = new TextView(this);
+        title.setText("Download Folder Required");
+        title.setTextColor(0xFFF1F0F7);
+        title.setTextSize(16);
+        title.setTypeface(null, Typeface.BOLD);
+        LinearLayout.LayoutParams tLp = new LinearLayout.LayoutParams(-1, -2);
+        tLp.setMargins(dp(14), 0, 0, 0);
+        titleRow.addView(title, tLp);
+        box.addView(titleRow, new LinearLayout.LayoutParams(-1, -2));
+
+        TextView msg = new TextView(this);
+        msg.setText("Please select a download folder in Settings first.");
+        msg.setTextColor(0xFF6B687C);
+        msg.setTextSize(13);
+        LinearLayout.LayoutParams msgLp = new LinearLayout.LayoutParams(-1, -2);
+        msgLp.setMargins(0, dp(16), 0, dp(22));
+        box.addView(msg, msgLp);
+
+        // Settings button
+        TextView settingsBtn = new TextView(this);
+        settingsBtn.setText("Open Settings");
+        settingsBtn.setTextColor(0xFFF1F0F7);
+        settingsBtn.setTextSize(14);
+        settingsBtn.setTypeface(null, Typeface.BOLD);
+        settingsBtn.setGravity(Gravity.CENTER);
+        GradientDrawable setBg = new GradientDrawable();
+        setBg.setCornerRadius(dp(12));
+        setBg.setColor(0xFF38BDF8);
+        settingsBtn.setBackground(setBg);
+        settingsBtn.setLayoutParams(new LinearLayout.LayoutParams(-1, dp(50)));
+        box.addView(settingsBtn);
+        settingsBtn.setOnClickListener(v -> {
+            dialog.dismiss();
+            startActivity(new Intent(DetailActivity.this, SettingsActivity.class));
+        });
+
+        // Cancel
+        TextView cancelBtn = new TextView(this);
+        cancelBtn.setText("Cancel");
+        cancelBtn.setTextColor(0xFF6B687C);
+        cancelBtn.setTextSize(13);
+        cancelBtn.setTypeface(null, Typeface.BOLD);
+        cancelBtn.setGravity(Gravity.CENTER);
+        GradientDrawable canBg = new GradientDrawable();
+        canBg.setCornerRadius(dp(12));
+        canBg.setColor(0x00000000);
+        canBg.setStroke(dp(1), 0xFF2E2F3D);
+        cancelBtn.setBackground(canBg);
+        LinearLayout.LayoutParams canLp = new LinearLayout.LayoutParams(-1, dp(48));
+        canLp.setMargins(0, dp(10), 0, 0);
+        box.addView(cancelBtn, canLp);
+        cancelBtn.setOnClickListener(v -> dialog.dismiss());
+
+        AlertDialog dialog = new AlertDialog.Builder(this).setView(box).create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            dialog.getWindow().setWindowAnimations(android.R.style.Animation_Dialog);
+        }
+        dialog.show();
+    }
+
+    private void showDownloadAllDialog() {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(24), dp(24), dp(24), dp(20));
+
+        LinearLayout titleRow = new LinearLayout(this);
+        titleRow.setOrientation(LinearLayout.HORIZONTAL);
+        titleRow.setGravity(Gravity.CENTER_VERTICAL);
+
+        ImageView icon = new ImageView(this);
+        icon.setImageResource(R.drawable.ic_download);
+        icon.setColorFilter(0xFF38BDF8);
+        icon.setPadding(dp(8), dp(8), dp(8), dp(8));
+        GradientDrawable iconBg = new GradientDrawable();
+        iconBg.setShape(GradientDrawable.OVAL);
+        iconBg.setColor(0x2238BDF8);
+        icon.setBackground(iconBg);
+        titleRow.addView(icon, new LinearLayout.LayoutParams(dp(44), dp(44)));
+
+        TextView title = new TextView(this);
+        title.setText("Download All Episodes");
+        title.setTextColor(0xFFF1F0F7);
+        title.setTextSize(16);
+        title.setTypeface(null, Typeface.BOLD);
+        LinearLayout.LayoutParams tLp = new LinearLayout.LayoutParams(-1, -2);
+        tLp.setMargins(dp(14), 0, 0, 0);
+        titleRow.addView(title, tLp);
+        box.addView(titleRow, new LinearLayout.LayoutParams(-1, -2));
+
+        TextView msg = new TextView(this);
+        msg.setText("Start downloading all " + episodes.size() + " episodes?");
+        msg.setTextColor(0xFF6B687C);
+        msg.setTextSize(13);
+        LinearLayout.LayoutParams msgLp = new LinearLayout.LayoutParams(-1, -2);
+        msgLp.setMargins(0, dp(16), 0, dp(22));
+        box.addView(msg, msgLp);
+
+        // Download All button
+        TextView downloadBtn = new TextView(this);
+        downloadBtn.setText("Download All (" + episodes.size() + ")");
+        downloadBtn.setTextColor(0xFFF1F0F7);
+        downloadBtn.setTextSize(14);
+        downloadBtn.setTypeface(null, Typeface.BOLD);
+        downloadBtn.setGravity(Gravity.CENTER);
+        GradientDrawable dlBg = new GradientDrawable();
+        dlBg.setCornerRadius(dp(12));
+        dlBg.setColor(0xFF38BDF8);
+        downloadBtn.setBackground(dlBg);
+        downloadBtn.setLayoutParams(new LinearLayout.LayoutParams(-1, dp(50)));
+        box.addView(downloadBtn);
+        downloadBtn.setOnClickListener(v -> {
+            dialog.dismiss();
+            downloadAllEpisodes();
+        });
+
+        // Cancel
+        TextView cancelBtn = new TextView(this);
+        cancelBtn.setText("Cancel");
+        cancelBtn.setTextColor(0xFF6B687C);
+        cancelBtn.setTextSize(13);
+        cancelBtn.setTypeface(null, Typeface.BOLD);
+        cancelBtn.setGravity(Gravity.CENTER);
+        GradientDrawable canBg = new GradientDrawable();
+        canBg.setCornerRadius(dp(12));
+        canBg.setColor(0x00000000);
+        canBg.setStroke(dp(1), 0xFF2E2F3D);
+        cancelBtn.setBackground(canBg);
+        LinearLayout.LayoutParams canLp = new LinearLayout.LayoutParams(-1, dp(48));
+        canLp.setMargins(0, dp(10), 0, 0);
+        box.addView(cancelBtn, canLp);
+        cancelBtn.setOnClickListener(v -> dialog.dismiss());
+
+        AlertDialog dialog = new AlertDialog.Builder(this).setView(box).create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            dialog.getWindow().setWindowAnimations(android.R.style.Animation_Dialog);
+        }
+        dialog.show();
+    }
+
     private void startDownload(EpisodeItem ep) {
         if (!StorageSettings.hasDownloadUri(this)) {
-            new AlertDialog.Builder(this)
-                    .setTitle("Select Download Folder")
-                    .setMessage("Please select a download folder first in Settings")
-                    .setPositiveButton("Go to Settings", (d, w) ->
-                            startActivity(new Intent(this, SettingsActivity.class)))
-                    .setNegativeButton("Cancel", null)
-                    .show();
+            showFolderRequiredDialog();
             return;
         }
 

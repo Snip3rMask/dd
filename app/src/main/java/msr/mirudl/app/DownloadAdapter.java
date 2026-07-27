@@ -147,11 +147,11 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     private TextView makeSectionView() {
         TextView tv = new TextView(ctx);
-        tv.setPadding(dp(20), dp(16), dp(20), dp(8));
-        tv.setTextColor(0xFF6F6A76);
+        tv.setPadding(dp(20), dp(20), dp(20), dp(8));
+        tv.setTextColor(0xFF6B687C);
         tv.setTextSize(12);
         tv.setTypeface(null, Typeface.BOLD);
-        tv.setLetterSpacing(0.08f);
+        tv.setLetterSpacing(0.06f);
         tv.setLayoutParams(new RecyclerView.LayoutParams(-1, -2));
         return tv;
     }
@@ -285,69 +285,59 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         return card;
     }
 
-    private View makeCompletedView() {
+        private View makeCompletedView() {
+        // Each completed item card
         LinearLayout card = new LinearLayout(ctx);
-        card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(dp(10), dp(8), dp(14), dp(8));
-        card.setLayoutParams(new RecyclerView.LayoutParams(-1, -2));
-        RecyclerView.LayoutParams lp = (RecyclerView.LayoutParams) card.getLayoutParams();
-        lp.setMargins(dp(20), dp(1), dp(12), 0);
+        card.setOrientation(LinearLayout.HORIZONTAL);
+        card.setGravity(Gravity.CENTER_VERTICAL);
+        card.setPadding(dp(16), dp(12), dp(12), dp(12));
+        RecyclerView.LayoutParams clp = new RecyclerView.LayoutParams(-1, -2);
+        clp.setMargins(dp(16), dp(4), dp(16), 0);
+        card.setLayoutParams(clp);
+        
+        GradientDrawable bg = new GradientDrawable();
+        bg.setCornerRadius(dp(12));
+        bg.setColor(0xFF22232D);
+        card.setBackground(bg);
 
-        // Row: check | title | size | delete
-        LinearLayout row = new LinearLayout(ctx);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(Gravity.CENTER_VERTICAL);
-        card.addView(row, new LinearLayout.LayoutParams(-1, -2));
-
-        ImageView check = new ImageView(ctx);
-        check.setId(R.id.dl_check);
-        check.setImageResource(android.R.drawable.checkbox_off_background);
-        check.setColorFilter(0xFFD0BCFF);
-        check.setPadding(dp(4), dp(4), dp(4), dp(4));
-        row.addView(check, new LinearLayout.LayoutParams(dp(28), dp(28)));
-
+        // Title
         TextView titleTv = new TextView(ctx);
         titleTv.setId(R.id.dl_title);
-        titleTv.setTextColor(0xFFF1EDF4);
+        titleTv.setTextColor(0xFFF1F0F7);
         titleTv.setTextSize(13);
         titleTv.setMaxLines(1);
         titleTv.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        row.addView(titleTv, new LinearLayout.LayoutParams(0, -2, 1));
+        card.addView(titleTv, new LinearLayout.LayoutParams(0, -2, 1));
 
+        // Size chip
         TextView sizeTv = new TextView(ctx);
         sizeTv.setId(R.id.dl_size);
-        sizeTv.setTextColor(0xFF6F6A76);
+        sizeTv.setTextColor(0xFF6B687C);
         sizeTv.setTextSize(10);
-        sizeTv.setPadding(dp(6), dp(2), dp(6), dp(2));
-        GradientDrawable chip = new GradientDrawable();
-        chip.setCornerRadius(dp(8));
-        chip.setColor(0xFF2B292F);
-        sizeTv.setBackground(chip);
-        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(-2, -2);
-        slp.setMargins(0, 0, dp(6), 0);
-        row.addView(sizeTv, slp);
+        sizeTv.setPadding(dp(8), dp(3), dp(8), dp(3));
+        GradientDrawable chipBg = new GradientDrawable();
+        chipBg.setCornerRadius(dp(8));
+        chipBg.setColor(0xFF2E2F3D);
+        sizeTv.setBackground(chipBg);
+        LinearLayout.LayoutParams sLp = new LinearLayout.LayoutParams(-2, -2);
+        sLp.setMargins(0, 0, dp(6), 0);
+        sizeTv.setLayoutParams(sLp);
+        card.addView(sizeTv);
 
+        // Delete button
         ImageView deleteBtn = new ImageView(ctx);
         deleteBtn.setId(R.id.dl_delete);
         deleteBtn.setImageResource(R.drawable.ic_delete);
-        deleteBtn.setColorFilter(0xFF6F6A76);
-        deleteBtn.setPadding(dp(4), dp(4), dp(4), dp(4));
-        row.addView(deleteBtn, new LinearLayout.LayoutParams(dp(28), dp(28)));
-
-        // Date text
-        TextView dateTv = new TextView(ctx);
-        dateTv.setId(R.id.dl_date);
-        dateTv.setTextColor(0xFF6F6A76);
-        dateTv.setTextSize(10);
-        LinearLayout.LayoutParams dateLp = new LinearLayout.LayoutParams(-2, -2);
-        dateLp.setMargins(dp(32), dp(4), 0, 0);
-        card.addView(dateTv, dateLp);
+        deleteBtn.setColorFilter(0xFF6B687C);
+        deleteBtn.setPadding(dp(6), dp(6), dp(6), dp(6));
+        GradientDrawable delBg = new GradientDrawable();
+        delBg.setShape(GradientDrawable.OVAL);
+        delBg.setColor(0x00000000);
+        deleteBtn.setBackground(delBg);
+        card.addView(deleteBtn, new LinearLayout.LayoutParams(dp(36), dp(36)));
 
         return card;
     }
-
-    // ── BIND ──
-
     private void bindFolder(FolderHolder h, FolderHeader fh) {
         h.title.setText(fh.name);
 
@@ -386,17 +376,13 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     private void bindCompleted(CompletedHolder h, DownloadEntryStore.Entry entry) {
-        h.titleTv.setText(entry.title != null ? entry.title : "");
+        String title = entry.title != null ? entry.title : "";
+        // Remove "Episode " prefix if present for cleaner display
+        if (title.startsWith("Episode ")) {
+            title = title.substring(8);
+        }
+        h.titleTv.setText(title);
         h.sizeTv.setText(formatSize(entry.size));
-        h.dateTv.setText(formatDate(entry.completedAt));
-
-        boolean selected = listener != null && listener.isSelected(entry);
-        h.check.setImageResource(selected
-                ? android.R.drawable.checkbox_on_background
-                : android.R.drawable.checkbox_off_background);
-        h.check.setOnClickListener(v -> {
-            if (listener != null) listener.onSelectionToggle(entry);
-        });
 
         h.card.setOnClickListener(v -> {
             if (listener != null) listener.onClick(entry);
@@ -444,15 +430,13 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     static class CompletedHolder extends RecyclerView.ViewHolder {
         View card;
-        TextView titleTv, sizeTv, dateTv;
-        ImageView check, deleteBtn;
+        TextView titleTv, sizeTv;
+        ImageView deleteBtn;
         CompletedHolder(View v) {
             super(v);
             card = v;
             titleTv = v.findViewById(R.id.dl_title);
             sizeTv = v.findViewById(R.id.dl_size);
-            dateTv = v.findViewById(R.id.dl_date);
-            check = v.findViewById(R.id.dl_check);
             deleteBtn = v.findViewById(R.id.dl_delete);
         }
     }
