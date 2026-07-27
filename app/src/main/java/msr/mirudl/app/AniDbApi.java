@@ -200,6 +200,88 @@ public class AniDbApi {
         }
     }
 
+    // ============ BROWSE ============
+
+    public List<AnimeItem> browseCurrentlyAiring() throws Exception {
+        String url = BASE + "/browse?sort=order_top_airing&status=Currently+Airing";
+        String html = getHtml(url);
+        return parseBrowseResults(html);
+    }
+
+    private List<AnimeItem> parseBrowseResults(String html) {
+        List<AnimeItem> results = new ArrayList<>();
+        // Browse page uses anime cards with class "group relative"
+        int idx = 0;
+        while (true) {
+            int cardStart = html.indexOf("group relative", idx);
+            if (cardStart < 0) break;
+            // Find the card wrapper start (go back to find <a or parent div)
+            int wrapperStart = html.lastIndexOf("<", cardStart);
+            if (wrapperStart < 0) break;
+            int cardEnd = html.indexOf("</a>", cardStart);
+            if (cardEnd < 0) {
+                cardEnd = html.indexOf("</div>", cardStart + 50);
+                if (cardEnd < 0) break;
+            }
+            String block = html.substring(wrapperStart, cardEnd + 4);
+
+            AnimeItem item = new AnimeItem();
+
+            // Extract href/title from the card link
+            int hrefIdx = block.indexOf("href="");
+            if (hrefIdx >= 0) {
+                int hrefEnd = block.indexOf(""", hrefIdx + 6);
+                if (hrefEnd > 0) {
+                    item.url = block.substring(hrefIdx + 6, hrefEnd);
+                    String[] parts = item.url.split("-");
+                    item.id = parts[parts.length - 1];
+                }
+            }
+
+            // Extract title — look for alt attribute on img or aria-label or text
+            // Try <h3> or <p> with title text
+            int titleIdx = block.indexOf("alt="");
+            if (titleIdx >= 0) {
+                titleIdx += 5;
+                int titleEnd = block.indexOf(""", titleIdx);
+                if (titleEnd > titleIdx) {
+                    item.title = block.substring(titleIdx, titleEnd).trim();
+                }
+            }
+            if (item.title == null || item.title.isEmpty()) {
+                // Try extracting from text in the card
+                int textStart = block.lastIndexOf(">", cardStart + 100);
+                if (textStart >= 0) {
+                    String text = block.substring(textStart + 1).trim();
+                    if (!text.isEmpty() && text.length() < 100) {
+                        item.title = android.text.Html.fromHtml(text).toString();
+                    }
+                }
+            }
+            if (item.title == null) item.title = "";
+
+            // Extract poster image
+            int imgIdx = block.indexOf("src="");
+            if (imgIdx >= 0) {
+                imgIdx += 5;
+                int imgEnd = block.indexOf(""", imgIdx);
+                if (imgEnd > imgIdx) {
+                    item.thumbnail = block.substring(imgIdx, imgEnd);
+                    if (item.thumbnail.startsWith("/")) {
+                        item.thumbnail = BASE + item.thumbnail;
+                    }
+                }
+            }
+
+            if (item.id != null && !item.title.isEmpty()) {
+                results.add(item);
+            }
+
+            idx = cardEnd + 4;
+        }
+        return results;
+    }
+
     // ============ HELPERS ============
 
     private String encode(String value) {

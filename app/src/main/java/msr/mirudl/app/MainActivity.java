@@ -205,28 +205,10 @@ public class MainActivity extends BaseActivity {
         emptyText.setVisibility(View.GONE);
         executor.execute(() -> {
             try {
-                List<AnimeItem> results = api.search("one piece");
+                List<AnimeItem> results = api.browseCurrentlyAiring();
                 handler.post(() -> {
                     loadingBar.setVisibility(View.GONE);
-                    if (!results.isEmpty()) {
-                        gridAdapter.setItems(results);
-                    } else {
-                        loadTrendingFallback();
-                    }
-                });
-            } catch (Exception e) {
-                handler.post(() -> loadingBar.setVisibility(View.GONE));
-            }
-        });
-    }
-
-    private void loadTrendingFallback() {
-        executor.execute(() -> {
-            try {
-                List<AnimeItem> results = api.search("naruto");
-                handler.post(() -> {
-                    loadingBar.setVisibility(View.GONE);
-                    if (!results.isEmpty()) {
+                    if (results != null && !results.isEmpty()) {
                         gridAdapter.setItems(results);
                     } else {
                         emptyText.setText(R.string.no_results);
