@@ -4,7 +4,6 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 import android.app.NotificationManager;
@@ -22,6 +21,9 @@ public class DownloadService extends Service {
 
     private final java.util.concurrent.ExecutorService worker =
             java.util.concurrent.Executors.newSingleThreadExecutor();
+
+    // Track total for multi-episode batch
+    private volatile int totalJobCount = 0;
 
     public static Intent startIntent(Context context, List<DownloadManager.Job> jobs) {
         Intent intent = new Intent(context, DownloadService.class);
@@ -47,7 +49,7 @@ public class DownloadService extends Service {
             DownloadManager.Job job = DownloadManager.find(jobId);
             if (job != null) {
                 DownloadManager.cancel(job);
-                notifyProgress(job);
+                pushNotif(buildNotif(job));
             }
             if (DownloadManager.activeCount() == 0) {
                 stopForeground(false);
@@ -58,9 +60,14 @@ public class DownloadService extends Service {
 
         if (!ACTION_START.equals(action)) return START_NOT_STICKY;
 
+        List<DownloadManager.Job> jobs = (List<DownloadManager.Job>)
+                intent.getSerializableExtra(EXTRA_JOBS);
+        if (jobs == null || jobs.isEmpty()) return START_NOT_STICKY;
+
+        totalJobCount = jobs.size();
         DownloadManager.setRunning(true);
 
-        startForeground(1001, buildNotification("Starting downloads...", 0, false));
+        startForeground(1001, buildNotif(null, "Starting " + totalJobCount + " downloads...", 0, false));
 
         worker.execute(() -> processQueue());
         return START_NOT_STICKY;
@@ -78,10 +85,16 @@ public class DownloadService extends Service {
 
     private void processQueue() {
         List<DownloadManager.Job> jobs = DownloadManager.snapshot();
-        for (DownloadManager.Job job : jobs) {
+        int completed = 0, failed = 0;
+
+        for (int i = 0; i < jobs.size(); i++) {
+            DownloadManager.Job job = jobs.get(i);
             if (job.finished) continue;
 
+            // Immediately show "Downloading X of Y" in notification
+            String batchInfo = getBatchInfo(i + 1);
             DownloadManager.update(job, 0, DownloadManager.STATUS_DOWNLOADING);
+            pushNotif(buildNotif(job, batchInfo + " Starting...", 0, false));
 
             try {
                 String playUrl = job.hlsUrl;
@@ -89,71 +102,74 @@ public class DownloadService extends Service {
                     playUrl = AniDbApi.getInstance().resolveHlsFromEmbed(playUrl);
                 }
 
+                final int jobIndex = i;
                 String output = HlsDownloader.download(
                         this, playUrl,
                         job.animeTitle + " - " + job.episodeTitle,
                         StorageSettings.getParallelSegments(this),
                         (percent, done, total) -> {
+                            // Real-time progress update
                             DownloadManager.update(job, percent, DownloadManager.STATUS_DOWNLOADING);
-                            notifyProgress(job);
+                            String info = getBatchInfo(jobIndex + 1);
+                            pushNotif(buildNotif(job, info + " " + percent + "%", percent, false));
                         },
                         () -> job.cancelled
                 );
 
                 DownloadManager.complete(job, output);
-                notifyProgress(job);
+                completed++;
+                // Show completed notification immediately
+                String info = getBatchInfo(jobIndex + 1);
+                pushNotif(buildNotif(job, "✓ " + info + " Done", 100, false));
 
             } catch (Exception e) {
-                String msg = e.getMessage() != null ? e.getMessage() : "Unknown error";
+                String msg = e.getMessage() != null ? e.getMessage() : "Failed";
                 DownloadManager.fail(job, msg);
-                notifyProgress(job);
+                failed++;
+                String info = getBatchInfo(i + 1);
+                pushNotif(buildNotif(job, "✗ " + info + " " + msg, 0, false));
             }
         }
 
         DownloadManager.setRunning(false);
-        notifyComplete();
+
+        // Final summary
+        String summary = "✓ " + completed + " done";
+        if (failed > 0) summary += ", ✗ " + failed + " failed";
+        if (completed + failed > 0) {
+            pushNotif(buildNotif(null, summary, 100, true));
+        }
+
         stopForeground(false);
         stopSelf();
     }
 
-    private void notifyProgress(DownloadManager.Job job) {
-        String text = job.episodeTitle != null ? job.episodeTitle : "";
-        if (text.isEmpty()) text = job.animeTitle;
-        text += " - " + job.percent + "%";
-        if (job.finished) {
-            text = job.status.equals(DownloadManager.STATUS_COMPLETED)
-                    ? "Completed: " + (job.episodeTitle != null ? job.episodeTitle : "")
-                    : (job.status != null ? job.status : "Error") + ": " + (job.episodeTitle != null ? job.episodeTitle : "");
-        }
-
-        NotificationManager mgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        if (mgr != null) {
-            mgr.notify(1001, buildNotification(text, job.percent, job.finished));
-        }
+    /** Helper to show "[3/12]" style batch progress */
+    private String getBatchInfo(int current) {
+        if (totalJobCount <= 1) return "";
+        return "[" + current + "/" + totalJobCount + "]";
     }
 
-    private void notifyComplete() {
-        int completed = 0, failed = 0;
-        for (DownloadManager.Job j : DownloadManager.snapshot()) {
-            if (DownloadManager.STATUS_COMPLETED.equals(j.status)) completed++;
-            else if (j.finished) failed++;
-        }
-        String text = "Done: " + completed + " done";
-        if (failed > 0) text += ", " + failed + " failed";
+    /** Push notification using job info */
+    private void pushNotif(android.app.Notification notif) {
         NotificationManager mgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        if (mgr != null) {
-            mgr.notify(1001, buildNotification(text, 100, true));
-        }
+        if (mgr != null) mgr.notify(1001, notif);
     }
 
-    private android.app.Notification buildNotification(String text, int progress, boolean done) {
+    /** Build a notification from a Job (title + text + progress) */
+    private android.app.Notification buildNotif(DownloadManager.Job job, String text, int progress, boolean done) {
+        String title = "MiruDL";
+        if (job != null && job.animeTitle != null) {
+            title = job.animeTitle;
+        }
+
         Intent openIntent = new Intent(this, MainActivity.class);
         PendingIntent pi = PendingIntent.getActivity(this, 0, openIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0));
+                PendingIntent.FLAG_UPDATE_CURRENT | (android.os.Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0));
 
         NotificationCompat.Builder b = new NotificationCompat.Builder(this, MiruDLApp.CHANNEL_DOWNLOADS)
                 .setSmallIcon(android.R.drawable.stat_sys_download)
-                .setContentTitle("MiruDL")
+                .setContentTitle(title)
                 .setContentText(text)
                 .setContentIntent(pi)
                 .setOnlyAlertOnce(true)
@@ -161,16 +177,34 @@ public class DownloadService extends Service {
 
         if (!done) {
             b.setProgress(100, Math.max(0, Math.min(100, progress)), false);
-            // Add cancel action in notification like Anifux
-            Intent cancelIntent = cancelIntent(this, getFirstActiveJobId());
-            PendingIntent cancelPi = PendingIntent.getService(this, 1002, cancelIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0));
-            b.addAction(android.R.drawable.ic_menu_close_clear_cancel, "Cancel", cancelPi);
+
+            // Cancel action
+            String activeId = getFirstActiveJobId();
+            if (!activeId.isEmpty()) {
+                Intent cancelIntent = cancelIntent(this, activeId);
+                PendingIntent cancelPi = PendingIntent.getService(this, 1002, cancelIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0));
+                b.addAction(android.R.drawable.ic_menu_close_clear_cancel, "Cancel All", cancelPi);
+            }
         } else {
             b.setProgress(0, 0, false);
         }
 
         return b.build();
+    }
+
+    /** Overload for backward compat – builds a notification directly from job state */
+    private android.app.Notification buildNotif(DownloadManager.Job job) {
+        if (job == null) {
+            return buildNotif(null, "Starting...", 0, false);
+        }
+        String text;
+        if (job.finished) {
+            text = job.status != null ? job.status : "Done";
+        } else {
+            text = job.episodeTitle + " - " + job.percent + "%";
+        }
+        return buildNotif(job, text, job.percent, job.finished);
     }
 
     private String getFirstActiveJobId() {
