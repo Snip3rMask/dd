@@ -178,14 +178,12 @@ public class DownloadService extends Service {
         if (!done) {
             b.setProgress(100, Math.max(0, Math.min(100, progress)), false);
 
-            // Cancel action
-            String activeId = getFirstActiveJobId();
-            if (!activeId.isEmpty()) {
-                Intent cancelIntent = cancelIntent(this, activeId);
-                PendingIntent cancelPi = PendingIntent.getService(this, 1002, cancelIntent,
-                        PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0));
-                b.addAction(android.R.drawable.ic_menu_close_clear_cancel, "Cancel All", cancelPi);
-            }
+            // Cancel action via BroadcastReceiver (more reliable than getService)
+            Intent cancelIntent = new Intent(this, CancelDownloadReceiver.class);
+            cancelIntent.putExtra("jobId", "all");
+            PendingIntent cancelPi = PendingIntent.getBroadcast(this, 1002, cancelIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0));
+            b.addAction(android.R.drawable.ic_menu_close_clear_cancel, "Cancel All", cancelPi);
         } else {
             b.setProgress(0, 0, false);
         }
@@ -207,10 +205,4 @@ public class DownloadService extends Service {
         return buildNotif(job, text, job.percent, job.finished);
     }
 
-    private String getFirstActiveJobId() {
-        for (DownloadManager.Job j : DownloadManager.snapshot()) {
-            if (!j.finished) return j.id;
-        }
-        return "";
-    }
 }
