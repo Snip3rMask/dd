@@ -81,7 +81,7 @@ class BackgroundService {
         _isRunning = true;
       } catch (e) {
         // Foreground service failed — process without it.
-        debugPrint('[BackgroundService] startService failed: $e');
+        print('[BackgroundService] startService failed: $e');
         _isRunning = true;
       }
     }
