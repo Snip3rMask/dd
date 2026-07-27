@@ -683,11 +683,11 @@ public class MainActivity extends BaseActivity {
     protected void onResume() {
         super.onResume();
         handler.postDelayed(refreshTask, 2000);
-    
+    }
+
     private int dp(int dp) {
         return (int) (dp * getResources().getDisplayMetrics().density);
     }
-}
 
     @Override
     protected void onPause() {
