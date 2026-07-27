@@ -69,7 +69,13 @@ public class MainActivity extends BaseActivity {
     // Common
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private final Runnable refreshTask = this::refreshDownloads;
+    private final Runnable refreshTask = new Runnable() {
+        @Override
+        public void run() {
+            refreshDownloads();
+            handler.postDelayed(this, 500);
+        }
+    };
 
     // Folder picker
     private final ActivityResultLauncher<Intent> folderPicker =
@@ -682,7 +688,7 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        handler.postDelayed(refreshTask, 500);
+        handler.post(refreshTask);
     }
 
     private int dp(int dp) {
