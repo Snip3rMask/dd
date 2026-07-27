@@ -682,7 +682,7 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        handler.postDelayed(refreshTask, 2000);
+        handler.postDelayed(refreshTask, 500);
     }
 
     private int dp(int dp) {

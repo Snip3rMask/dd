@@ -58,11 +58,6 @@ public class DownloadService extends Service {
 
         if (!ACTION_START.equals(action)) return START_NOT_STICKY;
 
-        List<DownloadManager.Job> jobs = (List<DownloadManager.Job>)
-                intent.getSerializableExtra(EXTRA_JOBS);
-        if (jobs == null || jobs.isEmpty()) return START_NOT_STICKY;
-
-        DownloadManager.enqueueAll(jobs);
         DownloadManager.setRunning(true);
 
         startForeground(1001, buildNotification("Starting downloads...", 0, false));
