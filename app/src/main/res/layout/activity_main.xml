@@ -375,6 +375,20 @@
                         android:textColor="@color/text_tertiary"
                         android:textSize="13sp" />
 
+                    <TextView
+                        android:id="@+id/btn_crash_reports"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:gravity="center_vertical"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:paddingHorizontal="14dp"
+                        android:text="Crash Reports"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:background="@drawable/bg_input"
+                        android:layout_marginTop="8dp" />
+
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"

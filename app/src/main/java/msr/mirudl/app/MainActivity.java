@@ -29,6 +29,12 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import org.json.JSONObject;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import android.widget.ScrollView;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -562,6 +568,154 @@ public class MainActivity extends BaseActivity {
 
     // ============ SETTINGS TAB ============
 
+    private void showCrashLogsDialog() {
+        CrashLogger.markViewed(this);
+        File[] files = CrashLogger.getCrashFiles(this);
+
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(22), dp(22), dp(22), dp(22));
+
+        TextView title = new TextView(this);
+        title.setText("Crash Reports (" + files.length + ")");
+        title.setTextColor(getColor(R.color.text_primary));
+        title.setTextSize(18);
+        title.setTypeface(null, Typeface.BOLD);
+        box.addView(title, new LinearLayout.LayoutParams(-1, -2));
+
+        if (files.length == 0) {
+            TextView empty = new TextView(this);
+            empty.setText("No crash logs");
+            empty.setTextColor(getColor(R.color.text_tertiary));
+            empty.setTextSize(14);
+            empty.setGravity(Gravity.CENTER);
+            empty.setPadding(0, dp(32), 0, dp(32));
+            box.addView(empty, new LinearLayout.LayoutParams(-1, -2));
+        } else {
+            // Clear All button
+            TextView clearAll = new TextView(this);
+            clearAll.setText("Clear All");
+            clearAll.setTextColor(getColor(R.color.primary));
+            clearAll.setTextSize(13);
+            clearAll.setTypeface(null, Typeface.BOLD);
+            clearAll.setGravity(Gravity.END);
+            clearAll.setPadding(0, dp(8), 0, dp(12));
+            clearAll.setOnClickListener(v -> {
+                CrashLogger.clearAll(this);
+                showCrashLogsDialog();
+            });
+            box.addView(clearAll, new LinearLayout.LayoutParams(-1, -2));
+
+            // List crash files
+            for (File file : files) {
+                LinearLayout row = new LinearLayout(this);
+                row.setOrientation(LinearLayout.HORIZONTAL);
+                row.setGravity(Gravity.CENTER_VERTICAL);
+                row.setPadding(dp(4), dp(8), dp(4), dp(8));
+                row.setBackground(UiHelper.rounded(getColor(R.color.surface_variant), dp(12)));
+                LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(-1, -2);
+                rowLp.setMargins(0, 0, 0, dp(6));
+                row.setLayoutParams(rowLp);
+
+                String dateStr = new SimpleDateFormat("MMM dd, hh:mm a", Locale.US)
+                        .format(new Date(file.lastModified()));
+                long sizeKb = file.length() / 1024;
+
+                TextView info = new TextView(this);
+                info.setText(dateStr + "  \u2022  " + (sizeKb > 0 ? sizeKb + " KB" : "<1 KB"));
+                info.setTextColor(getColor(R.color.text_primary));
+                info.setTextSize(12);
+                info.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1));
+                row.addView(info);
+
+                // Delete button
+                TextView delBtn = new TextView(this);
+                delBtn.setText("Delete");
+                delBtn.setTextColor(getColor(R.color.error));
+                delBtn.setTextSize(12);
+                delBtn.setPadding(dp(8), dp(4), dp(8), dp(4));
+                delBtn.setOnClickListener(v -> {
+                    CrashLogger.deleteCrashFile(file);
+                    showCrashLogsDialog();
+                });
+                row.addView(delBtn);
+
+                // View button
+                TextView viewBtn = new TextView(this);
+                viewBtn.setText("View");
+                viewBtn.setTextColor(getColor(R.color.primary));
+                viewBtn.setTextSize(12);
+                viewBtn.setPadding(dp(8), dp(4), dp(8), dp(4));
+                viewBtn.setOnClickListener(v -> showCrashDetailDialog(file));
+                row.addView(viewBtn);
+
+                box.addView(row);
+            }
+        }
+
+        // Close button
+        TextView closeBtn = new TextView(this);
+        closeBtn.setText("Close");
+        closeBtn.setTextColor(getColor(R.color.text_tertiary));
+        closeBtn.setTextSize(14);
+        closeBtn.setTypeface(null, Typeface.BOLD);
+        closeBtn.setGravity(Gravity.CENTER);
+        closeBtn.setBackground(UiHelper.rounded(getColor(R.color.surface_variant), dp(100)));
+        LinearLayout.LayoutParams closeLp = new LinearLayout.LayoutParams(-1, dp(50));
+        closeLp.setMargins(0, dp(12), 0, 0);
+        box.addView(closeBtn, closeLp);
+
+        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this).setView(box).create();
+        if (dialog.getWindow() != null)
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        dialog.show();
+        closeBtn.setOnClickListener(v -> dialog.dismiss());
+    }
+
+    private void showCrashDetailDialog(File file) {
+        StringBuilder content = new StringBuilder();
+        try {
+            java.io.BufferedReader r = new java.io.BufferedReader(new java.io.FileReader(file));
+            String line;
+            while ((line = r.readLine()) != null) {
+                if (content.length() > 5000) {
+                    content.append("\n... [TRUNCATED - file too large]");
+                    break;
+                }
+                content.append(line).append("\n");
+            }
+            r.close();
+        } catch (Exception ignored) {}
+
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(16), dp(16), dp(16), dp(16));
+
+        TextView title = new TextView(this);
+        title.setText("Crash Log");
+        title.setTextColor(getColor(R.color.text_primary));
+        title.setTextSize(16);
+        title.setTypeface(null, Typeface.BOLD);
+        box.addView(title, new LinearLayout.LayoutParams(-1, -2));
+
+        ScrollView scroll = new ScrollView(this);
+        TextView logText = new TextView(this);
+        logText.setText(content.toString());
+        logText.setTextColor(getColor(R.color.text_secondary));
+        logText.setTextSize(10);
+        logText.setTypeface(Typeface.MONOSPACE);
+        logText.setLineSpacing(dp(2), 1f);
+        scroll.addView(logText);
+        LinearLayout.LayoutParams scrollLp = new LinearLayout.LayoutParams(-1, dp(400));
+        scrollLp.setMargins(0, dp(12), 0, dp(12));
+        box.addView(scroll, scrollLp);
+
+        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this).setView(box).create();
+        if (dialog.getWindow() != null)
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        dialog.show();
+    }
+
     private void initSettingsTab() {
         folderText = findViewById(R.id.folder_path);
         findViewById(R.id.btn_select_folder).setOnClickListener(v -> pickFolder());
@@ -628,6 +782,12 @@ public class MainActivity extends BaseActivity {
                             Uri.parse("https://github.com/msrofficial/MiruDL-App")));
                 } catch (Exception ignored) {}
             });
+        }
+
+        // Crash Reports button
+        TextView crashBtn = findViewById(R.id.btn_crash_reports);
+        if (crashBtn != null) {
+            crashBtn.setOnClickListener(v -> showCrashLogsDialog());
         }
 
         updateFolderDisplay();
