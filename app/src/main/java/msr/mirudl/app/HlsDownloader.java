@@ -197,21 +197,6 @@ public final class HlsDownloader {
         return segments;
     }
 
-    private static List<VideoSource> parseMasterPlaylist(String master, String baseUrl) {
-        List<VideoSource> variants = new ArrayList<>();
-        String pendingInf = null;
-        for (String raw : master.split("\\r?\\n")) {
-            String line = raw.trim();
-            if (line.startsWith("#EXT-X-STREAM-INF")) {
-                pendingInf = line;
-            } else if (pendingInf != null && !line.isEmpty() && !line.startsWith("#")) {
-                String quality = extractRes(pendingInf);
-                variants.add(new VideoSource(quality, resolve(line, baseUrl)));
-                pendingInf = null;
-            }
-        }
-        return variants;
-    }
 
     private static String parseInitMap(String playlist, String baseUrl) {
         for (String raw : playlist.split("\\r?\\n")) {
