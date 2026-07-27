@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 
 public final class StorageSettings {
-    private static final String PREF = "anidb_settings";
+    private static final String PREF = "mirudl_settings";
     private static final String KEY_DOWNLOAD_URI = "download_uri";
     private static final String KEY_PARALLEL = "parallel_segments";
     private static final String KEY_QUALITY = "preferred_quality";

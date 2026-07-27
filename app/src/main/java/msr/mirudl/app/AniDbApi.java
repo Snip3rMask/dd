@@ -14,7 +14,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class AniDbApi {
-    private static final String BASE = "https://anidb.app";
+    public static final String BASE = "https://anidb.app";
     private static final String UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
     private static final int TIMEOUT = 30;
     private static AniDbApi instance;
@@ -45,7 +45,7 @@ public class AniDbApi {
 
     private List<AnimeItem> parseSearchResults(String html) {
         List<AnimeItem> results = new ArrayList<>();
-        // Match: href="https://anidb.app/anime/{slug}" with data-search-item
+        // Match: href with data-search-item
         int idx = 0;
         while (true) {
             int aStart = html.indexOf("<a ", idx);

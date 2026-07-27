@@ -288,7 +288,7 @@ public class MainActivity extends BaseActivity {
         }
         title.setText(anime.title != null ? anime.title : "Unknown");
 
-        // Fetch anime title from anidb
+        // Fetch anime title
         executor.execute(() -> {
             try {
                 String remoteTitle = api.getAnimeTitle(anime.id);

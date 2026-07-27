@@ -139,7 +139,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="MiruDL v1.0\nDirect HLS download from anidb.app\n\nDownloaded files are saved to your selected folder using Android's Storage Access Framework."
+                android:text="MiruDL v1.0\nDirect HLS video downloader\n\nDownloaded files are saved to your selected folder using Android's Storage Access Framework."
                 android:textColor="@color/text_tertiary"
                 android:textSize="12sp"
                 android:lineSpacingExtra="4dp" />

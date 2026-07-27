@@ -107,7 +107,7 @@ public class DetailActivity extends BaseActivity {
     private void loadDetails() {
         executor.execute(() -> {
             try {
-                // Try to get more info from anidb page
+                // Try to get more info from detail page
                 String title = api.getAnimeTitle(animeId);
                 if (title != null && !title.isEmpty()) {
                     String finalTitle = title;
