@@ -58,14 +58,6 @@ public class DownloadService extends Service {
         int activeJobs = DownloadManager.activeCount();
         if (activeJobs == 0) return START_NOT_STICKY;
 
-        // If already processing, the while(true) loop in processQueue()
-        // will pick up new jobs automatically. No need to start another.
-        if (processing) {
-            // Just update notification to reflect new job count
-            startForeground(NOTIF_ID, buildNotif(null, activeJobs + " downloads queued", 0, false));
-            return START_NOT_STICKY;
-        }
-
         totalJobCount = activeJobs;
         DownloadManager.setRunning(true);
 
@@ -118,6 +110,13 @@ public class DownloadService extends Service {
     }
 
     private void processQueue() {
+        // Safety: if no active jobs, exit immediately
+        if (DownloadManager.activeCount() == 0) {
+            try { stopForeground(true); } catch (Exception ignored) {}
+            try { stopSelf(); } catch (Exception ignored) {}
+            processing = false;
+            return;
+        }
         try {
             int completed = 0, failed = 0, cancelled = 0;
 
