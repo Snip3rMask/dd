@@ -71,21 +71,22 @@ class BackgroundService {
 
   /// Start or signal the download queue processor
   Future<void> start() async {
-    // Start the foreground service (for Android notification)
-    final service = FlutterBackgroundService();
+    // Try to start the foreground service for persistent notification.
+    // On some Android versions this may crash at the native level, so
+    // we guard it tightly. Even without the service, downloads work.
     if (!_isRunning) {
       try {
+        final service = FlutterBackgroundService();
         await service.startService();
         _isRunning = true;
       } catch (e) {
-        // Foreground service start failed — continue without it.
-        // Downloads will still process on the main isolate.
+        // Foreground service failed — process without it.
+        debugPrint('[BackgroundService] startService failed: $e');
         _isRunning = true;
       }
     }
 
     // Process the queue directly on the main isolate
-    // (the background isolate event routing is unreliable)
     _processQueue();
   }
 
@@ -106,6 +107,17 @@ class BackgroundService {
 
   @pragma('vm:entry-point')
   static void _onStart(ServiceInstance instance) {
+    // CRITICAL: Android requires startForeground() to be called within a
+    // few seconds of startForegroundService(), or the OS kills the app with
+    // a fatal RemoteServiceException (ForegroundServiceDidNotStartInTimeException
+    // on Android 12+, plain RemoteServiceException on Android 8-11). This must
+    // happen immediately — before any other work — or the app crashes natively
+    // in a way Dart's error handlers (FlutterError.onError, PlatformDispatcher.onError,
+    // runZonedGuarded) can never catch, since the crash occurs outside the Dart VM.
+    if (instance is AndroidServiceInstance) {
+      instance.setAsForegroundService();
+    }
+
     instance.on('stop').listen((_) => instance.stopSelf());
   }
 
@@ -180,7 +192,7 @@ class BackgroundService {
         completedAt: DateTime.now().millisecondsSinceEpoch,
       ));
 
-      _notificationService.showComplete(
+      await _notificationService.showComplete(
         id: AppConstants.notificationId,
         title: '✅ Download Complete',
         message: job.episodeTitle,
@@ -190,7 +202,7 @@ class BackgroundService {
       job.finished = true;
       job.error = e.toString();
 
-      _notificationService.showError(
+      await _notificationService.showError(
         id: AppConstants.notificationId,
         title: '❌ Download Failed',
         message: e.toString(),
@@ -199,16 +211,15 @@ class BackgroundService {
   }
 
   void _updateNotification(DownloadJob job) {
-    try {
+    // Fire-and-forget progress notification
+    unawaited(
       _notificationService.showProgress(
         id: AppConstants.notificationId,
         title: 'MiruDL',
         message: job.episodeTitle,
         progress: job.percent,
-      );
-    } catch (_) {
-      // Notification failure should not crash the download
-    }
+      ).catchError((_) {}),
+    );
   }
 
   Future<int> _getFileSize(String path) async {

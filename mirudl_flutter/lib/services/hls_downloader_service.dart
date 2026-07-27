@@ -289,7 +289,11 @@ class HlsDownloaderService {
       if (response.statusCode != 200) {
         throw HlsException('HTTP ${response.statusCode} for $url');
       }
-      return await response.transform(utf8.decoder).join();
+      final text = await response.transform(utf8.decoder).join();
+      return text;
+    } catch (e) {
+      if (e is HlsException) rethrow;
+      throw HlsException('Failed to fetch $url: $e');
     } finally {
       client.close();
     }
@@ -303,7 +307,20 @@ class HlsDownloaderService {
       request.headers.set('Referer', _referer);
       final response = await request.close();
       if (response.statusCode != 200) return [];
-      return await response.fold<List<int>>([], (prev, chunk) => prev + chunk.toList());
+      // Collect chunks into a list to avoid O(n²) copying
+      final chunks = <List<int>>[];
+      int totalLength = 0;
+      await for (final chunk in response) {
+        chunks.add(chunk);
+        totalLength += chunk.length;
+      }
+      final result = List<int>.filled(totalLength, 0);
+      int offset = 0;
+      for (final chunk in chunks) {
+        result.setRange(offset, offset + chunk.length, chunk);
+        offset += chunk.length;
+      }
+      return result;
     } catch (_) {
       return [];
     } finally {

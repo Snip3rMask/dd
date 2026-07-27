@@ -1,4 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'dart:developer' as developer;
+
 import '../core/constants/app_constants.dart';
 
 /// Notification service for download progress and alerts
@@ -13,37 +15,43 @@ class NotificationService {
   Future<void> init() async {
     if (_initialized) return;
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: false,
-    );
+    try {
+      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const iosSettings = DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: false,
+      );
 
-    await _plugin.initialize(
-      const InitializationSettings(
-        android: androidSettings,
-        iOS: iosSettings,
-      ),
-    );
-
-    // Create Android notification channel
-    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    if (androidPlugin != null) {
-      await androidPlugin.createNotificationChannel(
-        AndroidNotificationChannel(
-          AppConstants.notificationChannelId,
-          AppConstants.notificationChannelName,
-          description: AppConstants.notificationChannelDesc,
-          importance: Importance.low,
-          playSound: false,
-          enableVibration: false,
+      await _plugin.initialize(
+        const InitializationSettings(
+          android: androidSettings,
+          iOS: iosSettings,
         ),
       );
-    }
 
-    _initialized = true;
+      // Create Android notification channel
+      final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      if (androidPlugin != null) {
+        await androidPlugin.createNotificationChannel(
+          AndroidNotificationChannel(
+            AppConstants.notificationChannelId,
+            AppConstants.notificationChannelName,
+            description: AppConstants.notificationChannelDesc,
+            importance: Importance.low,
+            playSound: false,
+            enableVibration: false,
+          ),
+        );
+      }
+
+      _initialized = true;
+    } catch (e) {
+      developer.log('[NotificationService] init failed: $e');
+      // Mark as initialized anyway — app should still work without notifications
+      _initialized = true;
+    }
   }
 
   /// Show download progress notification
@@ -54,30 +62,34 @@ class NotificationService {
     required int progress,
     bool indeterminate = false,
   }) async {
-    await _plugin.show(
-      id,
-      title,
-      message,
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          AppConstants.notificationChannelId,
-          AppConstants.notificationChannelName,
-          channelDescription: AppConstants.notificationChannelDesc,
-          importance: Importance.low,
-          priority: Priority.low,
-          onlyAlertOnce: true,
-          ongoing: progress < 100,
-          showProgress: !indeterminate,
-          maxProgress: 100,
-          progress: progress.clamp(0, 100),
+    try {
+      await _plugin.show(
+        id,
+        title,
+        message,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            AppConstants.notificationChannelId,
+            AppConstants.notificationChannelName,
+            channelDescription: AppConstants.notificationChannelDesc,
+            importance: Importance.low,
+            priority: Priority.low,
+            onlyAlertOnce: true,
+            ongoing: progress < 100,
+            showProgress: !indeterminate,
+            maxProgress: 100,
+            progress: progress.clamp(0, 100),
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: false,
+            presentSound: false,
+          ),
         ),
-        iOS: const DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: false,
-          presentSound: false,
-        ),
-      ),
-    );
+      );
+    } catch (e) {
+      developer.log('[NotificationService] showProgress failed: $e');
+    }
   }
 
   /// Show a download complete notification
@@ -86,28 +98,32 @@ class NotificationService {
     required String title,
     required String message,
   }) async {
-    await _plugin.show(
-      id,
-      title,
-      message,
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          AppConstants.notificationChannelId,
-          AppConstants.notificationChannelName,
-          channelDescription: AppConstants.notificationChannelDesc,
-          importance: Importance.defaultImportance,
-          priority: Priority.defaultPriority,
-          onlyAlertOnce: true,
-          ongoing: false,
-          showProgress: false,
+    try {
+      await _plugin.show(
+        id,
+        title,
+        message,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            AppConstants.notificationChannelId,
+            AppConstants.notificationChannelName,
+            channelDescription: AppConstants.notificationChannelDesc,
+            importance: Importance.defaultImportance,
+            priority: Priority.defaultPriority,
+            onlyAlertOnce: true,
+            ongoing: false,
+            showProgress: false,
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
         ),
-        iOS: const DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        ),
-      ),
-    );
+      );
+    } catch (e) {
+      developer.log('[NotificationService] showComplete failed: $e');
+    }
   }
 
   /// Show a download failure notification
@@ -116,37 +132,49 @@ class NotificationService {
     required String title,
     required String message,
   }) async {
-    await _plugin.show(
-      id,
-      '❌ $title',
-      message,
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          AppConstants.notificationChannelId,
-          AppConstants.notificationChannelName,
-          channelDescription: AppConstants.notificationChannelDesc,
-          importance: Importance.defaultImportance,
-          priority: Priority.high,
-          onlyAlertOnce: true,
-          ongoing: false,
-          showProgress: false,
+    try {
+      await _plugin.show(
+        id,
+        '❌ $title',
+        message,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            AppConstants.notificationChannelId,
+            AppConstants.notificationChannelName,
+            channelDescription: AppConstants.notificationChannelDesc,
+            importance: Importance.defaultImportance,
+            priority: Priority.high,
+            onlyAlertOnce: true,
+            ongoing: false,
+            showProgress: false,
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
         ),
-        iOS: const DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        ),
-      ),
-    );
+      );
+    } catch (e) {
+      developer.log('[NotificationService] showError failed: $e');
+    }
   }
 
   /// Cancel a notification
   Future<void> cancel(int id) async {
-    await _plugin.cancel(id);
+    try {
+      await _plugin.cancel(id);
+    } catch (e) {
+      developer.log('[NotificationService] cancel failed: $e');
+    }
   }
 
   /// Cancel all notifications
   Future<void> cancelAll() async {
-    await _plugin.cancelAll();
+    try {
+      await _plugin.cancelAll();
+    } catch (e) {
+      developer.log('[NotificationService] cancelAll failed: $e');
+    }
   }
 }

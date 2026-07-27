@@ -25,6 +25,14 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Setup release signing
+        run: |
+          cd android
+          echo "storePassword=mirudl123" > key.properties
+          echo "keyPassword=mirudl123" >> key.properties
+          echo "keyAlias=upload" >> key.properties
+          echo "storeFile=upload-keystore.jks" >> key.properties
+
       - name: Build APK
         run: flutter build apk --release --split-per-abi
 
