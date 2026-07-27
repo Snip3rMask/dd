@@ -32,7 +32,7 @@ public class DetailActivity extends BaseActivity {
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private final AniDbApi api = AniDbApi.getInstance();
+    private final MiruClient client = MiruClient.getInstance();
     private List<EpisodeItem> episodes = new ArrayList<>();
 
     @Override
@@ -108,7 +108,7 @@ public class DetailActivity extends BaseActivity {
         executor.execute(() -> {
             try {
                 // Try to get more info from detail page
-                String title = api.getAnimeTitle(animeId);
+                String title = client.getAnimeTitle(animeId);
                 if (title != null && !title.isEmpty()) {
                     String finalTitle = title;
                     handler.post(() -> {
@@ -125,7 +125,7 @@ public class DetailActivity extends BaseActivity {
         loadingBar.setVisibility(View.VISIBLE);
         executor.execute(() -> {
             try {
-                episodes = api.getEpisodes(animeId);
+                episodes = client.getEpisodes(animeId);
                 handler.post(() -> {
                     loadingBar.setVisibility(View.GONE);
                     String count = episodes.size() + " episodes";
@@ -148,7 +148,7 @@ public class DetailActivity extends BaseActivity {
     private void resolveAndDownload(EpisodeItem ep) {
         executor.execute(() -> {
             try {
-                List<VideoSource> langs = api.getEpisodeLanguages(ep.id);
+                List<VideoSource> langs = client.getEpisodeLanguages(ep.id);
                 if (langs.isEmpty()) {
                     handler.post(() -> Toast.makeText(this, "No sources found", Toast.LENGTH_SHORT).show());
                     return;
@@ -160,7 +160,7 @@ public class DetailActivity extends BaseActivity {
                 }
                 if (selected == null) selected = langs.get(0);
 
-                String hlsUrl = api.resolveHlsFromEmbed(selected.url);
+                String hlsUrl = client.resolveHlsFromEmbed(selected.url);
                 if (hlsUrl == null) {
                     handler.post(() -> Toast.makeText(this, "No HLS URL found", Toast.LENGTH_SHORT).show());
                     return;
@@ -197,7 +197,7 @@ public class DetailActivity extends BaseActivity {
 
         executor.execute(() -> {
             try {
-                List<VideoSource> variants = api.getQualities(hlsUrl);
+                List<VideoSource> variants = client.getQualities(hlsUrl);
                 String finalUrl = hlsUrl;
                 // Auto-pick preferred quality from Settings — no dialog needed
                 for (VideoSource v : variants) {
@@ -239,7 +239,7 @@ public class DetailActivity extends BaseActivity {
 
                 for (EpisodeItem ep : episodes) {
                     try {
-                        List<VideoSource> langs = api.getEpisodeLanguages(ep.id);
+                        List<VideoSource> langs = client.getEpisodeLanguages(ep.id);
                         VideoSource selected = null;
                         for (VideoSource vs : langs) {
                             if (vs.language.equals(prefLang)) { selected = vs; break; }
@@ -247,7 +247,7 @@ public class DetailActivity extends BaseActivity {
                         if (selected == null && !langs.isEmpty()) selected = langs.get(0);
                         if (selected == null) continue;
 
-                        String hlsUrl = api.resolveHlsFromEmbed(selected.url);
+                        String hlsUrl = client.resolveHlsFromEmbed(selected.url);
                         if (hlsUrl == null) continue;
 
                         ep.hlsUrl = hlsUrl;

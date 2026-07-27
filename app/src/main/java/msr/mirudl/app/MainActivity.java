@@ -51,7 +51,7 @@ public class MainActivity extends BaseActivity {
     private ProgressBar loadingBar;
     private TextView emptyText;
     private AnimeGridAdapter gridAdapter;
-    private final AniDbApi api = AniDbApi.getInstance();
+    private final MiruClient client = MiruClient.getInstance();
 
     // Downloads
     private RecyclerView downloadsList;
@@ -205,7 +205,7 @@ public class MainActivity extends BaseActivity {
         emptyText.setVisibility(View.GONE);
         executor.execute(() -> {
             try {
-                List<AnimeItem> results = api.browseCurrentlyAiring();
+                List<AnimeItem> results = client.browseCurrentlyAiring();
                 handler.post(() -> {
                     loadingBar.setVisibility(View.GONE);
                     if (results != null && !results.isEmpty()) {
@@ -230,7 +230,7 @@ public class MainActivity extends BaseActivity {
         emptyText.setVisibility(View.GONE);
         executor.execute(() -> {
             try {
-                List<AnimeItem> results = api.search(query);
+                List<AnimeItem> results = client.search(query);
                 handler.post(() -> {
                     loadingBar.setVisibility(View.GONE);
                     gridAdapter.setItems(results);
@@ -291,7 +291,7 @@ public class MainActivity extends BaseActivity {
         // Fetch anime title
         executor.execute(() -> {
             try {
-                String remoteTitle = api.getAnimeTitle(anime.id);
+                String remoteTitle = client.getAnimeTitle(anime.id);
                 if (remoteTitle != null && !remoteTitle.isEmpty()) {
                     String finalTitle = remoteTitle;
                     handler.post(() -> title.setText(finalTitle));

@@ -110,7 +110,7 @@ public class DownloadService extends Service {
             try {
                 String playUrl = job.hlsUrl;
                 if (playUrl != null && playUrl.contains("/embed/")) {
-                    playUrl = AniDbApi.getInstance().resolveHlsFromEmbed(playUrl);
+                    playUrl = MiruClient.getInstance().resolveHlsFromEmbed(playUrl);
                 }
 
                 final int jobIndex = i;

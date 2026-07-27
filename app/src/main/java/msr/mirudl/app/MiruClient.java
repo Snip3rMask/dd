@@ -13,15 +13,15 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class AniDbApi {
+public class MiruClient {
     public static final String BASE = "https://anidb.app";
     private static final String UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
     private static final int TIMEOUT = 30;
-    private static AniDbApi instance;
+    private static MiruClient instance;
 
     private final OkHttpClient client;
 
-    private AniDbApi() {
+    private MiruClient() {
         client = new OkHttpClient.Builder()
                 .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
                 .readTimeout(TIMEOUT, TimeUnit.SECONDS)
@@ -30,8 +30,8 @@ public class AniDbApi {
                 .build();
     }
 
-    public static synchronized AniDbApi getInstance() {
-        if (instance == null) instance = new AniDbApi();
+    public static synchronized MiruClient getInstance() {
+        if (instance == null) instance = new MiruClient();
         return instance;
     }
 
@@ -45,7 +45,7 @@ public class AniDbApi {
 
     private List<AnimeItem> parseSearchResults(String html) {
         List<AnimeItem> results = new ArrayList<>();
-        // Match: href with data-search-item
+        // Parse search results
         int idx = 0;
         while (true) {
             int aStart = html.indexOf("<a ", idx);
@@ -124,7 +124,7 @@ public class AniDbApi {
                     lang.optString("name", "Source"),
                     lang.optString("embed_url", ""),
                     lang.optString("code", "jpn"),
-                    "AniDB"
+                    "MiruDL"
             );
             sources.add(vs);
         }

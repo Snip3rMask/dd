@@ -237,7 +237,7 @@ public final class HlsDownloader {
     private static String getText(String url) throws IOException {
         Request req = new Request.Builder().url(url)
                 .header("User-Agent", "Mozilla/5.0")
-                .header("Referer", AniDbApi.BASE + "/")
+                .header("Referer", MiruClient.BASE + "/")
                 .build();
         try (Response resp = CLIENT.newCall(req).execute()) {
             if (!resp.isSuccessful() || resp.body() == null)

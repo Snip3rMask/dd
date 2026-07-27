@@ -14,7 +14,7 @@ public class VideoSource implements Serializable {
         this.quality = quality;
         this.url = url;
         this.language = "jpn";
-        this.server = "AniDB";
+        this.server = "MiruDL";
         this.source = "primary";
     }
 
