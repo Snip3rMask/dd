@@ -82,7 +82,7 @@ jobs:
           else
             echo "tag_name=build-$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
             echo "release_name=Build $(date +%Y-%m-%d) $(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
-            echo "prerelease=true" >> $GITHUB_OUTPUT
+            echo "prerelease=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Create Release
