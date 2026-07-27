@@ -54,16 +54,19 @@ public class DownloadService extends Service {
 
         if (!ACTION_START.equals(action)) return START_NOT_STICKY;
 
-        // If already processing, new jobs will be picked up automatically
+        // Get active count BEFORE checking processing flag
+        int activeJobs = DownloadManager.activeCount();
+        if (activeJobs == 0) return START_NOT_STICKY;
+
+        // If already processing, the while(true) loop in processQueue()
+        // will pick up new jobs automatically. No need to start another.
         if (processing) {
+            // Just update notification to reflect new job count
+            startForeground(NOTIF_ID, buildNotif(null, activeJobs + " downloads queued", 0, false));
             return START_NOT_STICKY;
         }
 
-        List<DownloadManager.Job> jobs = (List<DownloadManager.Job>)
-                intent.getSerializableExtra(EXTRA_JOBS);
-        if (jobs == null || jobs.isEmpty()) return START_NOT_STICKY;
-
-        totalJobCount = DownloadManager.activeCount();
+        totalJobCount = activeJobs;
         DownloadManager.setRunning(true);
 
         startForeground(NOTIF_ID, buildNotif(null, totalJobCount + " downloads queued", 0, false));
@@ -115,107 +118,119 @@ public class DownloadService extends Service {
     }
 
     private void processQueue() {
-        int completed = 0, failed = 0, cancelled = 0;
+        try {
+            int completed = 0, failed = 0, cancelled = 0;
 
-        while (true) {
-            // Find next non-finished job
-            DownloadManager.Job job = null;
-            int jobIndex = 0;
-            int totalActive = 0;
-            List<DownloadManager.Job> snapshot = DownloadManager.snapshot();
-            for (DownloadManager.Job j : snapshot) {
-                if (!j.finished) {
-                    totalActive++;
-                    if (job == null) {
-                        job = j;
-                        jobIndex = totalActive;
+            while (true) {
+                // Find next non-finished job
+                DownloadManager.Job job = null;
+                int jobIndex = 0;
+                int totalActive = 0;
+                try {
+                    List<DownloadManager.Job> snapshot = DownloadManager.snapshot();
+                    for (DownloadManager.Job j : snapshot) {
+                        if (!j.finished) {
+                            totalActive++;
+                            if (job == null) {
+                                job = j;
+                                jobIndex = totalActive;
+                            }
+                        }
                     }
+                } catch (Exception e) {
+                    break; // Can't access job list, stop processing
+                }
+
+                if (job == null) break; // No more jobs
+
+                // Mark as downloading - wrap in try to avoid crashing the thread
+                try {
+                    DownloadManager.update(job, 0, DownloadManager.STATUS_DOWNLOADING);
+                    String batchInfo = getBatchInfo(jobIndex, totalActive);
+                    pushNotif(buildNotif(job, batchInfo + " Starting...", 0, false));
+                } catch (Exception ignored) {}
+
+                try {
+                    String playUrl = job.hlsUrl;
+                    if (playUrl != null && playUrl.contains("/embed/")) {
+                        playUrl = MiruClient.getInstance().resolveHlsFromEmbed(playUrl);
+                    }
+
+                    final int fJobIndex = jobIndex;
+                    final int fTotalActive = totalActive;
+                    final DownloadManager.Job currentJob = job;
+                    final long[] lastNotifTime = {0};
+
+                    String output = HlsDownloader.download(
+                            this, playUrl,
+                            job.animeTitle + " - " + job.episodeTitle,
+                            StorageSettings.getParallelSegments(this),
+                            (percent, done, total) -> {
+                                try {
+                                    DownloadManager.update(currentJob, percent, DownloadManager.STATUS_DOWNLOADING);
+                                    currentJob.percent = percent;
+                                    long now = System.currentTimeMillis();
+                                    if (now - lastNotifTime[0] >= 500) {
+                                        lastNotifTime[0] = now;
+                                        String info = getBatchInfo(fJobIndex, fTotalActive);
+                                        pushNotif(buildNotif(currentJob, info + " " + percent + "%", percent, false));
+                                    }
+                                } catch (Exception ignored) {}
+                            },
+                            () -> currentJob.cancelled
+                    );
+
+                    if (job.cancelled) {
+                        cancelled++;
+                        String info = getBatchInfo(jobIndex, totalActive);
+                        pushNotif(buildNotif(job, "\u2716 " + info + " Cancelled", 0, true));
+                    } else {
+                        DownloadManager.complete(job, output);
+                        completed++;
+                        String info = getBatchInfo(jobIndex, totalActive);
+                        pushNotif(buildNotif(job, "\u2713 " + info + " Done", 100, true));
+                    }
+                } catch (Exception e) {
+                    try {
+                        String msg = e.getMessage() != null ? e.getMessage() : "Failed";
+                        if (msg.contains("cancelled by user") || msg.contains("Cancelled") || job.cancelled) {
+                            DownloadManager.cancel(job);
+                            cancelled++;
+                        } else {
+                            DownloadManager.fail(job, msg);
+                            failed++;
+                        }
+                        String info = getBatchInfo(jobIndex, totalActive);
+                        pushNotif(buildNotif(job, "\u2716 " + info + " " + msg, 0, true));
+                    } catch (Exception ignored) {}
                 }
             }
-
-            if (job == null) break; // No more jobs
-
-            // Mark as downloading
-            DownloadManager.update(job, 0, DownloadManager.STATUS_DOWNLOADING);
-            String batchInfo = getBatchInfo(jobIndex, totalActive);
-            pushNotif(buildNotif(job, batchInfo + " Starting...", 0, false));
 
             try {
-                String playUrl = job.hlsUrl;
-                if (playUrl != null && playUrl.contains("/embed/")) {
-                    playUrl = MiruClient.getInstance().resolveHlsFromEmbed(playUrl);
+                DownloadManager.setRunning(false);
+
+                String summary = "\u2713 " + completed + " done";
+                if (failed > 0) summary += ", \u2716 " + failed + " failed";
+                if (cancelled > 0) summary += ", cancelled " + cancelled;
+                if (completed + failed + cancelled > 0) {
+                    pushNotif(buildNotif(null, summary, 100, true));
                 }
 
-                // Use a mutable progress holder for real-time notification updates
-                final int fJobIndex = jobIndex;
-                final int fTotalActive = totalActive;
-                final DownloadManager.Job currentJob = job;
-                final long[] lastNotifTime = {0};
+                mainHandler.postDelayed(() -> {
+                    try {
+                        NotificationManager mgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                        if (mgr != null) mgr.cancel(NOTIF_ID);
+                    } catch (Exception ignored) {}
+                }, 5000);
 
-                String output = HlsDownloader.download(
-                        this, playUrl,
-                        job.animeTitle + " - " + job.episodeTitle,
-                        StorageSettings.getParallelSegments(this),
-                        (percent, done, total) -> {
-                            // Update job progress in real-time
-                            DownloadManager.update(currentJob, percent, DownloadManager.STATUS_DOWNLOADING);
-                            currentJob.percent = percent;
-                            // Throttle notification updates to every 500ms to avoid spam
-                            long now = System.currentTimeMillis();
-                            if (now - lastNotifTime[0] >= 500) {
-                                lastNotifTime[0] = now;
-                                String info = getBatchInfo(fJobIndex, fTotalActive);
-                                pushNotif(buildNotif(currentJob, info + " " + percent + "%", percent, false));
-                            }
-                        },
-                        () -> currentJob.cancelled
-                );
-
-                // Check if cancelled during download
-                if (job.cancelled) {
-                    cancelled++;
-                    String info = getBatchInfo(jobIndex, totalActive);
-                    pushNotif(buildNotif(job, "\u2716 " + info + " Cancelled", 0, true));
-                } else {
-                    DownloadManager.complete(job, output);
-                    completed++;
-                    String info = getBatchInfo(jobIndex, totalActive);
-                    pushNotif(buildNotif(job, "\u2713 " + info + " Done", 100, true));
-                }
-
-            } catch (Exception e) {
-                String msg = e.getMessage() != null ? e.getMessage() : "Failed";
-                if (msg.contains("cancelled by user") || msg.contains("Cancelled") || job.cancelled) {
-                    DownloadManager.cancel(job);
-                    cancelled++;
-                } else {
-                    DownloadManager.fail(job, msg);
-                    failed++;
-                }
-                String info = getBatchInfo(jobIndex, totalActive);
-                pushNotif(buildNotif(job, "\u2716 " + info + " " + msg, 0, true));
-            }
+                stopForeground(true);
+                stopSelf();
+            } catch (Exception ignored) {}
+        } finally {
+            // ALWAYS reset processing flag to prevent stuck downloads
+            DownloadManager.setRunning(false);
+            processing = false;
         }
-
-        DownloadManager.setRunning(false);
-        processing = false;
-
-        // Final summary
-        String summary = "\u2713 " + completed + " done";
-        if (failed > 0) summary += ", \u2716 " + failed + " failed";
-        if (cancelled > 0) summary += ", cancelled " + cancelled;
-        if (completed + failed + cancelled > 0) {
-            pushNotif(buildNotif(null, summary, 100, true));
-        }
-
-        // Auto-cancel notification after 5 seconds
-        mainHandler.postDelayed(() -> {
-            NotificationManager mgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            if (mgr != null) mgr.cancel(NOTIF_ID);
-        }, 5000);
-
-        stopForeground(true);
-        stopSelf();
     }
 
     /** Helper to show "[3/12]" style batch progress */
