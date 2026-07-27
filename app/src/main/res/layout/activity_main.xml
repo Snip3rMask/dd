@@ -113,10 +113,6 @@
             </FrameLayout>
 
         </LinearLayout>
-                android:textSize="15sp"
-                android:visibility="gone" />
-
-        </LinearLayout>
 
         <!-- Tab: Downloads -->
         <LinearLayout
