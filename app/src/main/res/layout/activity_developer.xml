@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -44,22 +45,21 @@
             android:padding="32dp">
 
             <!-- Avatar -->
-            <LinearLayout
+            <androidx.cardview.widget.CardView
                 android:layout_width="96dp"
                 android:layout_height="96dp"
-                android:gravity="center"
-                android:background="@drawable/bg_icon_circle"
-                android:layout_marginTop="24dp">
+                android:layout_marginTop="24dp"
+                app:cardCornerRadius="48dp"
+                app:cardElevation="0dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="MSR"
-                    android:textColor="@color/primary"
-                    android:textSize="32sp"
-                    android:textStyle="bold" />
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/dev_avatar"
+                    android:scaleType="centerCrop"
+                    android:contentDescription="@null" />
 
-            </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
             <!-- Name -->
             <TextView
