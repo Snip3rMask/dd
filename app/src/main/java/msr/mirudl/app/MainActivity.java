@@ -54,6 +54,7 @@ public class MainActivity extends BaseActivity {
     // Tabs
     private View tabHome, tabDownloads, tabSettings;
     private int currentTab = 0;
+    private boolean suppressTabListener = false;
     private BottomNavigationView bottomNav;
 
     // Home
@@ -141,6 +142,7 @@ public class MainActivity extends BaseActivity {
         // Bottom nav
         bottomNav = findViewById(R.id.bottom_nav);
         bottomNav.setOnItemSelectedListener(item -> {
+            if (suppressTabListener) return true;
             int id = item.getItemId();
             if (id == R.id.nav_home) {
                 showTab(0);
@@ -169,6 +171,11 @@ public class MainActivity extends BaseActivity {
         if (savedInstanceState != null) {
             restoreTab = savedInstanceState.getInt("current_tab", 0);
         }
+        suppressTabListener = true;
+        if (restoreTab == 0) bottomNav.setSelectedItemId(R.id.nav_home);
+        else if (restoreTab == 1) bottomNav.setSelectedItemId(R.id.nav_downloads);
+        else if (restoreTab == 2) bottomNav.setSelectedItemId(R.id.nav_settings);
+        suppressTabListener = false;
         showTab(restoreTab);
         if (restoreTab == 0) loadPopular();
     }
@@ -180,11 +187,6 @@ public class MainActivity extends BaseActivity {
         tabHome.setVisibility(tab == 0 ? View.VISIBLE : View.GONE);
         tabDownloads.setVisibility(tab == 1 ? View.VISIBLE : View.GONE);
         tabSettings.setVisibility(tab == 2 ? View.VISIBLE : View.GONE);
-
-        // Sync bottom nav selection
-        if (tab == 0) bottomNav.setSelectedItemId(R.id.nav_home);
-        else if (tab == 1) bottomNav.setSelectedItemId(R.id.nav_downloads);
-        else if (tab == 2) bottomNav.setSelectedItemId(R.id.nav_settings);
 
         if (tab == 1) refreshDownloads();
         if (tab == 2) updateFolderDisplay();
