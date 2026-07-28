@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="icon.png" width="120" height="120" alt="MiruDL Logo">
+  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png" width="120" height="120" alt="MiruDL Logo">
 </p>
 
 <h1 align="center">MiruDL</h1>
@@ -24,7 +24,7 @@
 
 ## What is MiruDL?
 
-**MiruDL** is a simple, fast, and free Android app for downloading anime episodes.
+**MiruDL** (read: *Miru Download*) is a simple, fast, and free Android app for downloading anime episodes.
 
 No ads. No accounts. No tracking. Just a clean way to get your favorite shows on your device.
 
@@ -47,9 +47,13 @@ No ads. No accounts. No tracking. Just a clean way to get your favorite shows on
 | **Download history** | View all completed downloads |
 | **Material Design** | Clean, modern Android UI |
 
+> Currently only one server is available. More servers will be added in the future.
+
 ---
 
 ## Screenshots
+
+_(Add your screenshots here)_
 
 | Home | Detail | Downloads | Settings |
 |------|--------|-----------|----------|
@@ -67,9 +71,13 @@ No ads. No accounts. No tracking. Just a clean way to get your favorite shows on
 
 ---
 
-## Installation
+## Download
 
-Download the latest APK from the [Releases](https://github.com/msrofficial/MiruDL-App/releases) page and install it on your Android device.
+<a href="https://github.com/Snip3rMask/dd/releases/latest">
+  <img src="https://img.shields.io/badge/Download%20APK-Latest%20Release-4ADE80?style=for-the-badge&logo=android" alt="Download Latest APK">
+</a>
+
+Grab the latest APK from the link above and install it on your Android device.
 
 > **Minimum requirement:** Android 5.0 (API 21) or higher.
 
@@ -95,7 +103,8 @@ This app is currently **not open source** for contributions. We plan to make it 
 
 ## Developer
 
-- **GitHub:** [@msrofficial](https://github.com/msrofficial)
+- **GitHub:** [@Snip3rMask](https://github.com/Snip3rMask)
+- Built with love for the anime community
 
 ---
 
