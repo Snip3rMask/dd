@@ -168,7 +168,7 @@ public class DownloadsActivity extends BaseActivity {
 
             ImageView icon = new ImageView(this);
             icon.setImageResource(R.drawable.ic_delete);
-            icon.setColorFilter(0xFFF87171);
+            icon.setColorFilter(getColor(R.color.error));
             icon.setPadding(dp(8), dp(8), dp(8), dp(8));
             GradientDrawable iconBg = new GradientDrawable();
             iconBg.setShape(GradientDrawable.OVAL);
@@ -178,7 +178,7 @@ public class DownloadsActivity extends BaseActivity {
 
             TextView title = new TextView(this);
             title.setText("Clear History");
-            title.setTextColor(0xFFF1F0F7);
+            title.setTextColor(getColor(R.color.text_primary));
             title.setTextSize(17);
             title.setTypeface(null, Typeface.BOLD);
             LinearLayout.LayoutParams tLp = new LinearLayout.LayoutParams(-1, -2);
@@ -188,7 +188,7 @@ public class DownloadsActivity extends BaseActivity {
 
             TextView msg = new TextView(this);
             msg.setText("Remove all download history? This won't delete the actual files.");
-            msg.setTextColor(0xFF6B687C);
+            msg.setTextColor(getColor(R.color.text_tertiary));
             msg.setTextSize(13);
             msg.setLineSpacing(dp(3), 1f);
             LinearLayout.LayoutParams msgLp = new LinearLayout.LayoutParams(-1, -2);
@@ -198,13 +198,13 @@ public class DownloadsActivity extends BaseActivity {
             // Clear button
             TextView clearBtn = new TextView(this);
             clearBtn.setText("Clear History");
-            clearBtn.setTextColor(0xFFF1F0F7);
+            clearBtn.setTextColor(getColor(R.color.text_primary));
             clearBtn.setTextSize(14);
             clearBtn.setTypeface(null, Typeface.BOLD);
             clearBtn.setGravity(Gravity.CENTER);
             GradientDrawable clearBg = new GradientDrawable();
             clearBg.setCornerRadius(dp(12));
-            clearBg.setColor(0xFFF87171);
+            clearBg.setColor(getColor(R.color.error));
             clearBtn.setBackground(clearBg);
             clearBtn.setLayoutParams(new LinearLayout.LayoutParams(-1, dp(50)));
             box.addView(clearBtn);
@@ -213,14 +213,14 @@ public class DownloadsActivity extends BaseActivity {
             // Cancel
             TextView cancelBtn = new TextView(this);
             cancelBtn.setText("Cancel");
-            cancelBtn.setTextColor(0xFF6B687C);
+            cancelBtn.setTextColor(getColor(R.color.text_tertiary));
             cancelBtn.setTextSize(13);
             cancelBtn.setTypeface(null, Typeface.BOLD);
             cancelBtn.setGravity(Gravity.CENTER);
             GradientDrawable canBg = new GradientDrawable();
             canBg.setCornerRadius(dp(12));
             canBg.setColor(0x00000000);
-            canBg.setStroke(dp(1), 0xFF2E2F3D);
+            canBg.setStroke(dp(1), getColor(R.color.divider));
             cancelBtn.setBackground(canBg);
             LinearLayout.LayoutParams canLp = new LinearLayout.LayoutParams(-1, dp(48));
             canLp.setMargins(0, dp(10), 0, 0);
@@ -269,7 +269,7 @@ public class DownloadsActivity extends BaseActivity {
 
         ImageView icon = new ImageView(this);
         icon.setImageResource(R.drawable.ic_delete);
-        icon.setColorFilter(0xFFF87171);
+        icon.setColorFilter(getColor(R.color.error));
         icon.setPadding(dp(8), dp(8), dp(8), dp(8));
         GradientDrawable iconBg = new GradientDrawable();
         iconBg.setShape(GradientDrawable.OVAL);
@@ -282,7 +282,7 @@ public class DownloadsActivity extends BaseActivity {
 
         TextView title = new TextView(this);
         title.setText("Delete download?");
-        title.setTextColor(0xFFF1F0F7);
+        title.setTextColor(getColor(R.color.text_primary));
         title.setTextSize(17);
         title.setTypeface(null, Typeface.BOLD);
         LinearLayout.LayoutParams tLp = new LinearLayout.LayoutParams(-1, -2);
@@ -292,7 +292,7 @@ public class DownloadsActivity extends BaseActivity {
 
         TextView epName = new TextView(this);
         epName.setText(displayName);
-        epName.setTextColor(0xFF6B687C);
+        epName.setTextColor(getColor(R.color.text_tertiary));
         epName.setTextSize(13);
         epName.setMaxLines(2);
         epName.setEllipsize(android.text.TextUtils.TruncateAt.END);
@@ -303,13 +303,13 @@ public class DownloadsActivity extends BaseActivity {
         // Delete button
         TextView deleteBtn = new TextView(this);
         deleteBtn.setText("Delete file permanently");
-        deleteBtn.setTextColor(0xFFF1F0F7);
+        deleteBtn.setTextColor(getColor(R.color.text_primary));
         deleteBtn.setTextSize(14);
         deleteBtn.setTypeface(null, Typeface.BOLD);
         deleteBtn.setGravity(Gravity.CENTER);
         GradientDrawable delBg = new GradientDrawable();
         delBg.setCornerRadius(dp(12));
-        delBg.setColor(0xFFF87171);
+        delBg.setColor(getColor(R.color.error));
         deleteBtn.setBackground(delBg);
         deleteBtn.setLayoutParams(new LinearLayout.LayoutParams(-1, dp(50)));
         box.addView(deleteBtn);
@@ -317,13 +317,13 @@ public class DownloadsActivity extends BaseActivity {
         // Remove from history button
         TextView removeBtn = new TextView(this);
         removeBtn.setText("Remove from history only");
-        removeBtn.setTextColor(0xFFF1F0F7);
+        removeBtn.setTextColor(getColor(R.color.text_primary));
         removeBtn.setTextSize(13);
         removeBtn.setTypeface(null, Typeface.BOLD);
         removeBtn.setGravity(Gravity.CENTER);
         GradientDrawable remBg = new GradientDrawable();
         remBg.setCornerRadius(dp(12));
-        remBg.setColor(0xFF22232D);
+        remBg.setColor(getColor(R.color.surface_variant));
         removeBtn.setBackground(remBg);
         LinearLayout.LayoutParams remLp = new LinearLayout.LayoutParams(-1, dp(48));
         remLp.setMargins(0, dp(10), 0, 0);
@@ -332,14 +332,14 @@ public class DownloadsActivity extends BaseActivity {
         // Cancel button
         TextView cancelBtn = new TextView(this);
         cancelBtn.setText("Cancel");
-        cancelBtn.setTextColor(0xFF6B687C);
+        cancelBtn.setTextColor(getColor(R.color.text_tertiary));
         cancelBtn.setTextSize(13);
         cancelBtn.setTypeface(null, Typeface.BOLD);
         cancelBtn.setGravity(Gravity.CENTER);
         GradientDrawable canBg = new GradientDrawable();
         canBg.setCornerRadius(dp(12));
         canBg.setColor(0x00000000);
-        canBg.setStroke(dp(1), 0xFF2E2F3D);
+        canBg.setStroke(dp(1), getColor(R.color.divider));
         cancelBtn.setBackground(canBg);
         LinearLayout.LayoutParams canLp = new LinearLayout.LayoutParams(-1, dp(48));
         canLp.setMargins(0, dp(10), 0, 0);

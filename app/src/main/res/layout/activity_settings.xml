@@ -87,7 +87,7 @@
                 android:id="@+id/parallel_value"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="16 segments"
+                android:text="16"
                 android:textColor="@color/text_primary"
                 android:textSize="26sp"
                 android:layout_marginTop="6dp" />

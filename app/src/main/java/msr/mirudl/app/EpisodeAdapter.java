@@ -7,6 +7,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,17 +49,17 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.ViewHold
         h.title.setText("Episode " + ep.getLabel());
         if (ep.filler) {
             h.title.setText("Episode " + ep.getLabel() + " [FILLER]");
-            h.title.setTextColor(0xFFA0A0B0);
+            h.title.setTextColor(ContextCompat.getColor(h.itemView.getContext(), R.color.text_secondary));
         } else {
-            h.title.setTextColor(0xFFFAFAFA);
+            h.title.setTextColor(ContextCompat.getColor(h.itemView.getContext(), R.color.text_primary));
         }
         h.downloadIcon.setVisibility(View.VISIBLE);
         if (downloadedEpisodes.contains(ep.getLabel())) {
             h.downloadIcon.setImageResource(R.drawable.ic_check);
-            h.downloadIcon.setColorFilter(0xFF4ADE80);
+            h.downloadIcon.setColorFilter(ContextCompat.getColor(h.itemView.getContext(), R.color.success));
         } else {
             h.downloadIcon.setImageResource(R.drawable.ic_download);
-            h.downloadIcon.setColorFilter(0xFF38BDF8);
+            h.downloadIcon.setColorFilter(ContextCompat.getColor(h.itemView.getContext(), R.color.primary));
         }
         h.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onClick(ep);

@@ -444,7 +444,7 @@ public class MainActivity extends BaseActivity {
     }
 
         private void showDeleteDownloadDialog(DownloadEntry dlEntry) {
-        int errorColor = 0xFFF87171;
+        int errorColor = getColor(R.color.error);
 
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
@@ -467,7 +467,7 @@ public class MainActivity extends BaseActivity {
 
         TextView title = new TextView(this);
         title.setText("Delete download?");
-        title.setTextColor(0xFFF1F0F7);
+        title.setTextColor(getColor(R.color.text_primary));
         title.setTextSize(17);
         title.setTypeface(null, Typeface.BOLD);
         LinearLayout.LayoutParams tLp = new LinearLayout.LayoutParams(-1, -2);
@@ -479,7 +479,7 @@ public class MainActivity extends BaseActivity {
         if (displayName.startsWith("Episode ")) displayName = displayName.substring(8);
         TextView epName = new TextView(this);
         epName.setText(displayName);
-        epName.setTextColor(0xFF6B687C);
+        epName.setTextColor(getColor(R.color.text_tertiary));
         epName.setTextSize(13);
         epName.setMaxLines(2);
         epName.setEllipsize(android.text.TextUtils.TruncateAt.END);
@@ -490,7 +490,7 @@ public class MainActivity extends BaseActivity {
         // Buttons
         TextView deleteBtn = new TextView(this);
         deleteBtn.setText("Delete file permanently");
-        deleteBtn.setTextColor(0xFFF1F0F7);
+        deleteBtn.setTextColor(getColor(R.color.text_primary));
         deleteBtn.setTextSize(14);
         deleteBtn.setTypeface(null, Typeface.BOLD);
         deleteBtn.setGravity(Gravity.CENTER);
@@ -503,13 +503,13 @@ public class MainActivity extends BaseActivity {
 
         TextView removeBtn = new TextView(this);
         removeBtn.setText("Remove from history only");
-        removeBtn.setTextColor(0xFFF1F0F7);
+        removeBtn.setTextColor(getColor(R.color.text_primary));
         removeBtn.setTextSize(13);
         removeBtn.setTypeface(null, Typeface.BOLD);
         removeBtn.setGravity(Gravity.CENTER);
         GradientDrawable remBg = new GradientDrawable();
         remBg.setCornerRadius(dp(12));
-        remBg.setColor(0xFF22232D);
+        remBg.setColor(getColor(R.color.surface_variant));
         removeBtn.setBackground(remBg);
         LinearLayout.LayoutParams remLp = new LinearLayout.LayoutParams(-1, -2);
         remLp.setMargins(0, dp(10), 0, 0);
@@ -517,14 +517,14 @@ public class MainActivity extends BaseActivity {
 
         TextView cancelBtn = new TextView(this);
         cancelBtn.setText("Cancel");
-        cancelBtn.setTextColor(0xFF6B687C);
+        cancelBtn.setTextColor(getColor(R.color.text_tertiary));
         cancelBtn.setTextSize(13);
         cancelBtn.setTypeface(null, Typeface.BOLD);
         cancelBtn.setGravity(Gravity.CENTER);
         GradientDrawable canBg = new GradientDrawable();
         canBg.setCornerRadius(dp(12));
         canBg.setColor(0x00000000);
-        canBg.setStroke(dp(1), 0xFF2E2F3D);
+        canBg.setStroke(dp(1), getColor(R.color.divider));
         cancelBtn.setBackground(canBg);
         LinearLayout.LayoutParams canLp = new LinearLayout.LayoutParams(-1, -2);
         canLp.setMargins(0, dp(10), 0, 0);
@@ -555,7 +555,7 @@ public class MainActivity extends BaseActivity {
     private void showDeleteMultipleDialog(List<DownloadEntry> entries) {
         if (entries.isEmpty()) return;
         String desc = entries.size() == 1 ? entries.get(0).title : entries.size() + " files";
-        int errorColor = 0xFFF87171;
+        int errorColor = getColor(R.color.error);
 
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
@@ -577,7 +577,7 @@ public class MainActivity extends BaseActivity {
 
         TextView title = new TextView(this);
         title.setText("Delete " + desc + "?");
-        title.setTextColor(0xFFF1F0F7);
+        title.setTextColor(getColor(R.color.text_primary));
         title.setTextSize(17);
         title.setTypeface(null, Typeface.BOLD);
         LinearLayout.LayoutParams tLp = new LinearLayout.LayoutParams(-1, -2);
@@ -588,7 +588,7 @@ public class MainActivity extends BaseActivity {
         // Message
         TextView message = new TextView(this);
         message.setText("Removing from history keeps the file on your device.");
-        message.setTextColor(0xFF6B687C);
+        message.setTextColor(getColor(R.color.text_tertiary));
         message.setTextSize(13);
         LinearLayout.LayoutParams msgLp = new LinearLayout.LayoutParams(-1, -2);
         msgLp.setMargins(dp(58), dp(4), 0, dp(20));
@@ -597,7 +597,7 @@ public class MainActivity extends BaseActivity {
         // Delete files button
         TextView deleteBtn = new TextView(this);
         deleteBtn.setText("Delete files permanently");
-        deleteBtn.setTextColor(0xFFF1F0F7);
+        deleteBtn.setTextColor(getColor(R.color.text_primary));
         deleteBtn.setTextSize(14);
         deleteBtn.setTypeface(null, Typeface.BOLD);
         deleteBtn.setGravity(Gravity.CENTER);
@@ -611,13 +611,13 @@ public class MainActivity extends BaseActivity {
         // Remove from history
         TextView removeBtn = new TextView(this);
         removeBtn.setText("Remove from history only");
-        removeBtn.setTextColor(0xFFF1F0F7);
+        removeBtn.setTextColor(getColor(R.color.text_primary));
         removeBtn.setTextSize(13);
         removeBtn.setTypeface(null, Typeface.BOLD);
         removeBtn.setGravity(Gravity.CENTER);
         GradientDrawable remBg = new GradientDrawable();
         remBg.setCornerRadius(dp(12));
-        remBg.setColor(0xFF22232D);
+        remBg.setColor(getColor(R.color.surface_variant));
         removeBtn.setBackground(remBg);
         LinearLayout.LayoutParams remLp = new LinearLayout.LayoutParams(-1, dp(48));
         remLp.setMargins(0, dp(10), 0, 0);
@@ -626,14 +626,14 @@ public class MainActivity extends BaseActivity {
         // Cancel
         TextView cancelBtn = new TextView(this);
         cancelBtn.setText("Cancel");
-        cancelBtn.setTextColor(0xFF6B687C);
+        cancelBtn.setTextColor(getColor(R.color.text_tertiary));
         cancelBtn.setTextSize(13);
         cancelBtn.setTypeface(null, Typeface.BOLD);
         cancelBtn.setGravity(Gravity.CENTER);
         GradientDrawable canBg = new GradientDrawable();
         canBg.setCornerRadius(dp(12));
         canBg.setColor(0x00000000);
-        canBg.setStroke(dp(1), 0xFF2E2F3D);
+        canBg.setStroke(dp(1), getColor(R.color.divider));
         cancelBtn.setBackground(canBg);
         LinearLayout.LayoutParams canLp = new LinearLayout.LayoutParams(-1, dp(48));
         canLp.setMargins(0, dp(10), 0, 0);
@@ -751,13 +751,13 @@ public class MainActivity extends BaseActivity {
                 // Close button
         TextView closeBtn = new TextView(this);
         closeBtn.setText("Close");
-        closeBtn.setTextColor(0xFFF1F0F7);
+        closeBtn.setTextColor(getColor(R.color.text_primary));
         closeBtn.setTextSize(14);
         closeBtn.setTypeface(null, Typeface.BOLD);
         closeBtn.setGravity(Gravity.CENTER);
         GradientDrawable closeBg = new GradientDrawable();
         closeBg.setCornerRadius(dp(12));
-        closeBg.setColor(0xFF22232D);
+        closeBg.setColor(getColor(R.color.surface_variant));
         closeBtn.setBackground(closeBg);
         LinearLayout.LayoutParams closeLp = new LinearLayout.LayoutParams(-1, dp(48));
         closeLp.setMargins(0, dp(16), 0, 0);
@@ -834,7 +834,7 @@ public class MainActivity extends BaseActivity {
 
         int currentParallel = StorageSettings.getParallelSegments(this);
         parallelBar.setProgress(currentParallel);
-        parallelValue.setText(currentParallel + " segments");
+        parallelValue.setText(String.valueOf(currentParallel));
 
         parallelBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onStartTrackingTouch(SeekBar bar) {}
@@ -843,7 +843,7 @@ public class MainActivity extends BaseActivity {
             public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
                 if (fromUser) {
                     int val = Math.max(1, progress);
-                    parallelValue.setText(val + " segments");
+                    parallelValue.setText(String.valueOf(val));
                     StorageSettings.setParallelSegments(MainActivity.this, val);
                 }
             }

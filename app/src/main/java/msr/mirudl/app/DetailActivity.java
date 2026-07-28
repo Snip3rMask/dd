@@ -245,7 +245,7 @@ public class DetailActivity extends BaseActivity {
 
         ImageView icon = new ImageView(this);
         icon.setImageResource(R.drawable.ic_folder);
-        icon.setColorFilter(0xFF38BDF8);
+        icon.setColorFilter(getColor(R.color.primary));
         icon.setPadding(dp(8), dp(8), dp(8), dp(8));
         GradientDrawable iconBg = new GradientDrawable();
         iconBg.setShape(GradientDrawable.OVAL);
@@ -255,7 +255,7 @@ public class DetailActivity extends BaseActivity {
 
         TextView title = new TextView(this);
         title.setText("Download Folder Required");
-        title.setTextColor(0xFFF1F0F7);
+        title.setTextColor(getColor(R.color.text_primary));
         title.setTextSize(16);
         title.setTypeface(null, Typeface.BOLD);
         LinearLayout.LayoutParams tLp = new LinearLayout.LayoutParams(-1, -2);
@@ -265,7 +265,7 @@ public class DetailActivity extends BaseActivity {
 
         TextView msg = new TextView(this);
         msg.setText("Please select a download folder in Settings first.");
-        msg.setTextColor(0xFF6B687C);
+        msg.setTextColor(getColor(R.color.text_tertiary));
         msg.setTextSize(13);
         LinearLayout.LayoutParams msgLp = new LinearLayout.LayoutParams(-1, -2);
         msgLp.setMargins(0, dp(16), 0, dp(22));
@@ -274,13 +274,13 @@ public class DetailActivity extends BaseActivity {
         // Settings button
         TextView settingsBtn = new TextView(this);
         settingsBtn.setText("Open Settings");
-        settingsBtn.setTextColor(0xFFF1F0F7);
+        settingsBtn.setTextColor(getColor(R.color.text_primary));
         settingsBtn.setTextSize(14);
         settingsBtn.setTypeface(null, Typeface.BOLD);
         settingsBtn.setGravity(Gravity.CENTER);
         GradientDrawable setBg = new GradientDrawable();
         setBg.setCornerRadius(dp(12));
-        setBg.setColor(0xFF38BDF8);
+        setBg.setColor(getColor(R.color.primary));
         settingsBtn.setBackground(setBg);
         settingsBtn.setLayoutParams(new LinearLayout.LayoutParams(-1, dp(50)));
         box.addView(settingsBtn);
@@ -289,14 +289,14 @@ public class DetailActivity extends BaseActivity {
         // Cancel
         TextView cancelBtn = new TextView(this);
         cancelBtn.setText("Cancel");
-        cancelBtn.setTextColor(0xFF6B687C);
+        cancelBtn.setTextColor(getColor(R.color.text_tertiary));
         cancelBtn.setTextSize(13);
         cancelBtn.setTypeface(null, Typeface.BOLD);
         cancelBtn.setGravity(Gravity.CENTER);
         GradientDrawable canBg = new GradientDrawable();
         canBg.setCornerRadius(dp(12));
         canBg.setColor(0x00000000);
-        canBg.setStroke(dp(1), 0xFF2E2F3D);
+        canBg.setStroke(dp(1), getColor(R.color.divider));
         cancelBtn.setBackground(canBg);
         LinearLayout.LayoutParams canLp = new LinearLayout.LayoutParams(-1, dp(48));
         canLp.setMargins(0, dp(10), 0, 0);
@@ -330,7 +330,7 @@ public class DetailActivity extends BaseActivity {
 
         ImageView icon = new ImageView(this);
         icon.setImageResource(R.drawable.ic_download);
-        icon.setColorFilter(0xFF38BDF8);
+        icon.setColorFilter(getColor(R.color.primary));
         icon.setPadding(dp(8), dp(8), dp(8), dp(8));
         GradientDrawable iconBg = new GradientDrawable();
         iconBg.setShape(GradientDrawable.OVAL);
@@ -340,7 +340,7 @@ public class DetailActivity extends BaseActivity {
 
         TextView title = new TextView(this);
         title.setText("Download All Episodes");
-        title.setTextColor(0xFFF1F0F7);
+        title.setTextColor(getColor(R.color.text_primary));
         title.setTextSize(16);
         title.setTypeface(null, Typeface.BOLD);
         LinearLayout.LayoutParams tLp = new LinearLayout.LayoutParams(-1, -2);
@@ -350,7 +350,7 @@ public class DetailActivity extends BaseActivity {
 
         TextView msg = new TextView(this);
         msg.setText("Start downloading all " + episodes.size() + " episodes?");
-        msg.setTextColor(0xFF6B687C);
+        msg.setTextColor(getColor(R.color.text_tertiary));
         msg.setTextSize(13);
         LinearLayout.LayoutParams msgLp = new LinearLayout.LayoutParams(-1, -2);
         msgLp.setMargins(0, dp(16), 0, dp(22));
@@ -359,13 +359,13 @@ public class DetailActivity extends BaseActivity {
         // Download All button
         TextView downloadBtn = new TextView(this);
         downloadBtn.setText("Download All (" + episodes.size() + ")");
-        downloadBtn.setTextColor(0xFFF1F0F7);
+        downloadBtn.setTextColor(getColor(R.color.text_primary));
         downloadBtn.setTextSize(14);
         downloadBtn.setTypeface(null, Typeface.BOLD);
         downloadBtn.setGravity(Gravity.CENTER);
         GradientDrawable dlBg = new GradientDrawable();
         dlBg.setCornerRadius(dp(12));
-        dlBg.setColor(0xFF38BDF8);
+        dlBg.setColor(getColor(R.color.primary));
         downloadBtn.setBackground(dlBg);
         downloadBtn.setLayoutParams(new LinearLayout.LayoutParams(-1, dp(50)));
         box.addView(downloadBtn);
@@ -374,14 +374,14 @@ public class DetailActivity extends BaseActivity {
         // Cancel
         TextView cancelBtn = new TextView(this);
         cancelBtn.setText("Cancel");
-        cancelBtn.setTextColor(0xFF6B687C);
+        cancelBtn.setTextColor(getColor(R.color.text_tertiary));
         cancelBtn.setTextSize(13);
         cancelBtn.setTypeface(null, Typeface.BOLD);
         cancelBtn.setGravity(Gravity.CENTER);
         GradientDrawable canBg = new GradientDrawable();
         canBg.setCornerRadius(dp(12));
         canBg.setColor(0x00000000);
-        canBg.setStroke(dp(1), 0xFF2E2F3D);
+        canBg.setStroke(dp(1), getColor(R.color.divider));
         cancelBtn.setBackground(canBg);
         LinearLayout.LayoutParams canLp = new LinearLayout.LayoutParams(-1, dp(48));
         canLp.setMargins(0, dp(10), 0, 0);

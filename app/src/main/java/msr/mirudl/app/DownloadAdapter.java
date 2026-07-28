@@ -12,6 +12,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.core.content.ContextCompat;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -148,7 +149,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private TextView makeSectionView() {
         TextView tv = new TextView(ctx);
         tv.setPadding(dp(20), dp(20), dp(20), dp(8));
-        tv.setTextColor(0xFF6B687C);
+        tv.setTextColor(ContextCompat.getColor(ctx, R.color.text_tertiary));
         tv.setTextSize(12);
         tv.setTypeface(null, Typeface.BOLD);
         tv.setLetterSpacing(0.06f);
@@ -167,14 +168,14 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
         GradientDrawable bg = new GradientDrawable();
         bg.setCornerRadius(dp(16));
-        bg.setColor(0xFF1D1B20);
+        bg.setColor(ContextCompat.getColor(ctx, R.color.surface_variant));
         card.setBackground(bg);
 
         // Expand icon
         ImageView icon = new ImageView(ctx);
         icon.setId(R.id.folder_icon);
         icon.setImageResource(android.R.drawable.arrow_down_float);
-        icon.setColorFilter(0xFF9A94A0);
+        icon.setColorFilter(ContextCompat.getColor(ctx, R.color.text_secondary));
         icon.setPadding(dp(12), dp(10), dp(12), dp(10));
         card.addView(icon, new LinearLayout.LayoutParams(dp(56), dp(56)));
 
@@ -186,7 +187,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
         TextView groupTitle = new TextView(ctx);
         groupTitle.setId(R.id.group_title);
-        groupTitle.setTextColor(0xFFF1EDF4);
+        groupTitle.setTextColor(ContextCompat.getColor(ctx, R.color.text_primary));
         groupTitle.setTextSize(16);
         groupTitle.setTypeface(null, Typeface.BOLD);
         groupTitle.setMaxLines(1);
@@ -195,7 +196,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
         TextView groupStatus = new TextView(ctx);
         groupStatus.setId(R.id.group_status);
-        groupStatus.setTextColor(0xFF9A94A0);
+        groupStatus.setTextColor(ContextCompat.getColor(ctx, R.color.text_secondary));
         groupStatus.setTextSize(12);
         groupStatus.setTypeface(null, Typeface.NORMAL);
         groupStatus.setMaxLines(1);
@@ -224,13 +225,13 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         lp.setMargins(dp(16), dp(4), dp(16), 0);
         GradientDrawable bg = new GradientDrawable();
         bg.setCornerRadius(dp(14));
-        bg.setColor(0xFF1D1B20);
+        bg.setColor(ContextCompat.getColor(ctx, R.color.surface_variant));
         card.setBackground(bg);
 
         // Anime name
         TextView animeTv = new TextView(ctx);
         animeTv.setId(R.id.dl_anime);
-        animeTv.setTextColor(0xFF6F6A76);
+        animeTv.setTextColor(ContextCompat.getColor(ctx, R.color.text_tertiary));
         animeTv.setTextSize(11);
         animeTv.setMaxLines(1);
         animeTv.setEllipsize(android.text.TextUtils.TruncateAt.END);
@@ -239,7 +240,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         // Episode title
         TextView epTv = new TextView(ctx);
         epTv.setId(R.id.dl_title);
-        epTv.setTextColor(0xFFF1EDF4);
+        epTv.setTextColor(ContextCompat.getColor(ctx, R.color.text_primary));
         epTv.setTextSize(14);
         epTv.setMaxLines(1);
         epTv.setEllipsize(android.text.TextUtils.TruncateAt.END);
@@ -257,7 +258,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
         TextView statusTv = new TextView(ctx);
         statusTv.setId(R.id.dl_status);
-        statusTv.setTextColor(0xFF9A94A0);
+        statusTv.setTextColor(ContextCompat.getColor(ctx, R.color.text_secondary));
         statusTv.setTextSize(12);
         statusTv.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1));
         row.addView(statusTv);
@@ -271,7 +272,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         ImageView cancelBtn = new ImageView(ctx);
         cancelBtn.setId(R.id.dl_cancel);
         cancelBtn.setImageResource(R.drawable.ic_close);
-        cancelBtn.setColorFilter(0xFFF2B8B5);
+        cancelBtn.setColorFilter(ContextCompat.getColor(ctx, R.color.error));
         cancelBtn.setPadding(dp(6), dp(6), dp(6), dp(6));
         LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(dp(30), dp(30));
         clp.setMargins(dp(8), 0, 0, 0);
@@ -297,13 +298,13 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         
         GradientDrawable bg = new GradientDrawable();
         bg.setCornerRadius(dp(12));
-        bg.setColor(0xFF22232D);
+        bg.setColor(ContextCompat.getColor(ctx, R.color.surface_variant));
         card.setBackground(bg);
 
         // Title
         TextView titleTv = new TextView(ctx);
         titleTv.setId(R.id.dl_title);
-        titleTv.setTextColor(0xFFF1F0F7);
+        titleTv.setTextColor(ContextCompat.getColor(ctx, R.color.text_primary));
         titleTv.setTextSize(13);
         titleTv.setMaxLines(1);
         titleTv.setEllipsize(android.text.TextUtils.TruncateAt.END);
@@ -312,12 +313,12 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         // Size chip
         TextView sizeTv = new TextView(ctx);
         sizeTv.setId(R.id.dl_size);
-        sizeTv.setTextColor(0xFF6B687C);
+        sizeTv.setTextColor(ContextCompat.getColor(ctx, R.color.text_tertiary));
         sizeTv.setTextSize(10);
         sizeTv.setPadding(dp(8), dp(3), dp(8), dp(3));
         GradientDrawable chipBg = new GradientDrawable();
         chipBg.setCornerRadius(dp(8));
-        chipBg.setColor(0xFF2E2F3D);
+        chipBg.setColor(ContextCompat.getColor(ctx, R.color.divider));
         sizeTv.setBackground(chipBg);
         LinearLayout.LayoutParams sLp = new LinearLayout.LayoutParams(-2, -2);
         sLp.setMargins(0, 0, dp(6), 0);
@@ -328,7 +329,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         ImageView deleteBtn = new ImageView(ctx);
         deleteBtn.setId(R.id.dl_delete);
         deleteBtn.setImageResource(R.drawable.ic_delete);
-        deleteBtn.setColorFilter(0xFF6B687C);
+        deleteBtn.setColorFilter(ContextCompat.getColor(ctx, R.color.text_tertiary));
         deleteBtn.setPadding(dp(6), dp(6), dp(6), dp(6));
         GradientDrawable delBg = new GradientDrawable();
         delBg.setShape(GradientDrawable.OVAL);
