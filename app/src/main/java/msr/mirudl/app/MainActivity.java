@@ -309,7 +309,7 @@ public class MainActivity extends BaseActivity {
         TextView title = view.findViewById(R.id.detail_title);
         TextView info = view.findViewById(R.id.detail_info);
         TextView desc = view.findViewById(R.id.detail_description);
-        TextView btnEpisodes = view.findViewById(R.id.btn_view_episodes);
+        View btnEpisodes = view.findViewById(R.id.btn_view_episodes);
 
         if (anime.thumbnail != null && !anime.thumbnail.isEmpty()) {
             com.bumptech.glide.Glide.with(this).load(anime.thumbnail).centerCrop().into(thumb);
@@ -852,7 +852,8 @@ public class MainActivity extends BaseActivity {
         qualitySpinner = findViewById(R.id.quality_spinner);
         String[] qualities = {"1080p", "720p", "480p", "360p", "Auto"};
         ArrayAdapter<String> qAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_dropdown_item, qualities);
+                R.layout.spinner_value_chevron, qualities);
+        qAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         qualitySpinner.setAdapter(qAdapter);
         String prefQ = StorageSettings.getPreferredQuality(this);
         for (int i = 0; i < qualities.length; i++) {
@@ -869,7 +870,8 @@ public class MainActivity extends BaseActivity {
         String[] langs = {"jpn", "eng"};
         String[] langLabels = {"Sub (Japanese)", "Dub (English)"};
         ArrayAdapter<String> lAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_dropdown_item, langLabels);
+                R.layout.spinner_value_chevron, langLabels);
+        lAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         langSpinner.setAdapter(lAdapter);
         String prefLang = StorageSettings.getPreferredLanguage(this);
         for (int i = 0; i < langs.length; i++) {
@@ -888,7 +890,7 @@ public class MainActivity extends BaseActivity {
         if (themeSwitch != null && themeLabel != null) {
             boolean isDark = StorageSettings.isDarkTheme(this);
             themeSwitch.setChecked(isDark);
-            themeLabel.setText(isDark ? "Dark theme" : "Light theme");
+            themeLabel.setText(isDark ? R.string.dark_mode_on : R.string.dark_mode_off);
             themeSwitch.setOnCheckedChangeListener((btn, isChecked) -> {
                 StorageSettings.setDarkTheme(MainActivity.this, isChecked);
                 // Recreate to apply theme

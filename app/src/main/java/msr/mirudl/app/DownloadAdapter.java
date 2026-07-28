@@ -167,17 +167,20 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         lp.setMargins(dp(12), dp(6), dp(12), 0);
 
         GradientDrawable bg = new GradientDrawable();
-        bg.setCornerRadius(dp(16));
+        bg.setCornerRadius(dp(18));
         bg.setColor(ContextCompat.getColor(ctx, R.color.surface_variant));
         card.setBackground(bg);
 
-        // Expand icon
+        // Expand icon (icon-square badge, matching Settings row language)
         ImageView icon = new ImageView(ctx);
         icon.setId(R.id.folder_icon);
         icon.setImageResource(android.R.drawable.arrow_down_float);
-        icon.setColorFilter(ContextCompat.getColor(ctx, R.color.text_secondary));
-        icon.setPadding(dp(12), dp(10), dp(12), dp(10));
-        card.addView(icon, new LinearLayout.LayoutParams(dp(56), dp(56)));
+        icon.setColorFilter(ContextCompat.getColor(ctx, R.color.primary));
+        icon.setPadding(dp(14), dp(14), dp(14), dp(14));
+        icon.setBackground(roundedBg(R.color.icon_bg, 12));
+        LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(dp(44), dp(44));
+        iconLp.setMargins(dp(8), 0, 0, 0);
+        card.addView(icon, iconLp);
 
         // Text column
         LinearLayout textCol = new LinearLayout(ctx);
@@ -209,8 +212,9 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         ImageView deleteIcon = new ImageView(ctx);
         deleteIcon.setId(R.id.folder_delete);
         deleteIcon.setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
-        deleteIcon.clearColorFilter();
+        deleteIcon.setColorFilter(ContextCompat.getColor(ctx, R.color.text_tertiary));
         deleteIcon.setPadding(dp(6), dp(6), dp(6), dp(6));
+        makeRippleBorderless(deleteIcon);
         card.addView(deleteIcon, new LinearLayout.LayoutParams(dp(48), dp(48)));
 
         return card;
@@ -224,9 +228,28 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         RecyclerView.LayoutParams lp = (RecyclerView.LayoutParams) card.getLayoutParams();
         lp.setMargins(dp(16), dp(4), dp(16), 0);
         GradientDrawable bg = new GradientDrawable();
-        bg.setCornerRadius(dp(14));
+        bg.setCornerRadius(dp(16));
         bg.setColor(ContextCompat.getColor(ctx, R.color.surface_variant));
         card.setBackground(bg);
+
+        // Top row: icon-square badge + (anime name / episode title)
+        LinearLayout topRow = new LinearLayout(ctx);
+        topRow.setOrientation(LinearLayout.HORIZONTAL);
+        topRow.setGravity(Gravity.CENTER_VERTICAL);
+        card.addView(topRow, new LinearLayout.LayoutParams(-1, -2));
+
+        ImageView leadingIcon = new ImageView(ctx);
+        leadingIcon.setImageResource(R.drawable.ic_download);
+        leadingIcon.setColorFilter(ContextCompat.getColor(ctx, R.color.primary));
+        leadingIcon.setPadding(dp(9), dp(9), dp(9), dp(9));
+        leadingIcon.setBackground(roundedBg(R.color.icon_bg, 12));
+        topRow.addView(leadingIcon, new LinearLayout.LayoutParams(dp(38), dp(38)));
+
+        LinearLayout textCol = new LinearLayout(ctx);
+        textCol.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams textColLp = new LinearLayout.LayoutParams(0, -2, 1);
+        textColLp.setMargins(dp(12), 0, 0, 0);
+        topRow.addView(textCol, textColLp);
 
         // Anime name
         TextView animeTv = new TextView(ctx);
@@ -235,18 +258,19 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         animeTv.setTextSize(11);
         animeTv.setMaxLines(1);
         animeTv.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        card.addView(animeTv, new LinearLayout.LayoutParams(-1, -2));
+        textCol.addView(animeTv, new LinearLayout.LayoutParams(-1, -2));
 
         // Episode title
         TextView epTv = new TextView(ctx);
         epTv.setId(R.id.dl_title);
         epTv.setTextColor(ContextCompat.getColor(ctx, R.color.text_primary));
         epTv.setTextSize(14);
+        epTv.setTypeface(null, Typeface.BOLD);
         epTv.setMaxLines(1);
         epTv.setEllipsize(android.text.TextUtils.TruncateAt.END);
         LinearLayout.LayoutParams epLp = new LinearLayout.LayoutParams(-1, -2);
         epLp.setMargins(0, dp(2), 0, 0);
-        card.addView(epTv, epLp);
+        textCol.addView(epTv, epLp);
 
         // Progress row
         LinearLayout row = new LinearLayout(ctx);
@@ -277,10 +301,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(dp(30), dp(30));
         clp.setMargins(dp(8), 0, 0, 0);
         cancelBtn.setLayoutParams(clp);
-        GradientDrawable cancelBg = new GradientDrawable();
-        cancelBg.setShape(GradientDrawable.OVAL);
-        cancelBg.setColor(0x00000000);
-        cancelBtn.setBackground(cancelBg);
+        makeRippleBorderless(cancelBtn);
         row.addView(cancelBtn);
 
         return card;
@@ -297,9 +318,19 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         card.setLayoutParams(clp);
         
         GradientDrawable bg = new GradientDrawable();
-        bg.setCornerRadius(dp(12));
+        bg.setCornerRadius(dp(16));
         bg.setColor(ContextCompat.getColor(ctx, R.color.surface_variant));
         card.setBackground(bg);
+
+        // Completed icon-square badge
+        ImageView checkIcon = new ImageView(ctx);
+        checkIcon.setImageResource(R.drawable.ic_check);
+        checkIcon.setColorFilter(ContextCompat.getColor(ctx, R.color.success));
+        checkIcon.setPadding(dp(7), dp(7), dp(7), dp(7));
+        checkIcon.setBackground(roundedBg(R.color.icon_bg, 10));
+        LinearLayout.LayoutParams checkLp = new LinearLayout.LayoutParams(dp(30), dp(30));
+        checkLp.setMargins(0, 0, dp(10), 0);
+        card.addView(checkIcon, checkLp);
 
         // Title
         TextView titleTv = new TextView(ctx);
@@ -318,7 +349,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         sizeTv.setPadding(dp(8), dp(3), dp(8), dp(3));
         GradientDrawable chipBg = new GradientDrawable();
         chipBg.setCornerRadius(dp(8));
-        chipBg.setColor(ContextCompat.getColor(ctx, R.color.divider));
+        chipBg.setColor(ContextCompat.getColor(ctx, R.color.surface_high));
         sizeTv.setBackground(chipBg);
         LinearLayout.LayoutParams sLp = new LinearLayout.LayoutParams(-2, -2);
         sLp.setMargins(0, 0, dp(6), 0);
@@ -331,10 +362,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         deleteBtn.setImageResource(R.drawable.ic_delete);
         deleteBtn.setColorFilter(ContextCompat.getColor(ctx, R.color.text_tertiary));
         deleteBtn.setPadding(dp(6), dp(6), dp(6), dp(6));
-        GradientDrawable delBg = new GradientDrawable();
-        delBg.setShape(GradientDrawable.OVAL);
-        delBg.setColor(0x00000000);
-        deleteBtn.setBackground(delBg);
+        makeRippleBorderless(deleteBtn);
         card.addView(deleteBtn, new LinearLayout.LayoutParams(dp(36), dp(36)));
 
         return card;
@@ -457,6 +485,19 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     private int dp(int dp) {
         return (int) (dp * ctx.getResources().getDisplayMetrics().density);
+    }
+
+    private GradientDrawable roundedBg(int colorRes, int radiusDp) {
+        GradientDrawable d = new GradientDrawable();
+        d.setCornerRadius(dp(radiusDp));
+        d.setColor(ContextCompat.getColor(ctx, colorRes));
+        return d;
+    }
+
+    private void makeRippleBorderless(View v) {
+        android.util.TypedValue outValue = new android.util.TypedValue();
+        ctx.getTheme().resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true);
+        if (outValue.resourceId != 0) v.setBackgroundResource(outValue.resourceId);
     }
 
     private String formatSize(long bytes) {

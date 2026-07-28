@@ -48,6 +48,21 @@ public class AnimeGridAdapter extends RecyclerView.Adapter<AnimeGridAdapter.View
                     .centerCrop()
                     .into(h.thumb);
         }
+
+        if (item.rating != null && !item.rating.isEmpty() && !item.rating.equals("0")) {
+            h.ratingBadge.setVisibility(View.VISIBLE);
+            h.ratingText.setText(item.rating);
+        } else {
+            h.ratingBadge.setVisibility(View.GONE);
+        }
+
+        if (item.episodes > 0) {
+            h.episodesBadge.setVisibility(View.VISIBLE);
+            h.episodesBadge.setText(item.episodes + " EP");
+        } else {
+            h.episodesBadge.setVisibility(View.GONE);
+        }
+
         h.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onClick(item);
         });
@@ -59,10 +74,16 @@ public class AnimeGridAdapter extends RecyclerView.Adapter<AnimeGridAdapter.View
     static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView thumb;
         TextView title;
+        View ratingBadge;
+        TextView ratingText;
+        TextView episodesBadge;
         ViewHolder(View v) {
             super(v);
             thumb = v.findViewById(R.id.anime_thumb);
             title = v.findViewById(R.id.anime_title);
+            ratingBadge = v.findViewById(R.id.anime_rating_badge);
+            ratingText = v.findViewById(R.id.anime_rating);
+            episodesBadge = v.findViewById(R.id.anime_episodes);
         }
     }
 }

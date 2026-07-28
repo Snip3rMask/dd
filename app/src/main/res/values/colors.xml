@@ -24,4 +24,8 @@
     <color name="warning">#F9AB00</color>
     <color name="overlay">#B3FFFFFF</color>
     <color name="scrim">#66000000</color>
+
+    <!-- Icon badge backgrounds -->
+    <color name="icon_bg">#E7F4FD</color>
+    <color name="icon_bg_danger">#FBE8E8</color>
 </resources>

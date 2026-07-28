@@ -78,7 +78,8 @@ public class SettingsActivity extends BaseActivity {
         qualitySpinner = findViewById(R.id.quality_spinner);
         String[] qualities = {"1080p", "720p", "480p", "360p", "Auto"};
         ArrayAdapter<String> qAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_dropdown_item, qualities);
+                R.layout.spinner_value_chevron, qualities);
+        qAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         qualitySpinner.setAdapter(qAdapter);
         String prefQ = StorageSettings.getPreferredQuality(this);
         for (int i = 0; i < qualities.length; i++) {
@@ -96,7 +97,8 @@ public class SettingsActivity extends BaseActivity {
         String[] langs = {"jpn", "eng"};
         String[] langLabels = {"Sub (Japanese)", "Dub (English)"};
         ArrayAdapter<String> lAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_dropdown_item, langLabels);
+                R.layout.spinner_value_chevron, langLabels);
+        lAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         langSpinner.setAdapter(lAdapter);
         String prefLang = StorageSettings.getPreferredLanguage(this);
         for (int i = 0; i < langs.length; i++) {
@@ -108,6 +110,19 @@ public class SettingsActivity extends BaseActivity {
             }
             @Override public void onNothingSelected(AdapterView<?> p) {}
         });
+
+        // Theme toggle
+        androidx.appcompat.widget.SwitchCompat themeSwitch = findViewById(R.id.theme_switch);
+        TextView themeLabel = findViewById(R.id.theme_label);
+        if (themeSwitch != null && themeLabel != null) {
+            boolean isDark = StorageSettings.isDarkTheme(this);
+            themeSwitch.setChecked(isDark);
+            themeLabel.setText(isDark ? R.string.dark_mode_on : R.string.dark_mode_off);
+            themeSwitch.setOnCheckedChangeListener((btn, isChecked) -> {
+                StorageSettings.setDarkTheme(SettingsActivity.this, isChecked);
+                recreate();
+            });
+        }
 
         // GitHub link in Developer section
         View githubLink = findViewById(R.id.id_github_link);
