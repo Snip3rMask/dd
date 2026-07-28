@@ -852,7 +852,7 @@ public class MainActivity extends BaseActivity {
         qualitySpinner = findViewById(R.id.quality_spinner);
         String[] qualities = {"1080p", "720p", "480p", "360p", "Auto"};
         ArrayAdapter<String> qAdapter = new ArrayAdapter<>(this,
-                R.layout.spinner_value_chevron, qualities);
+                R.layout.spinner_value_chevron, android.R.id.text1, qualities);
         qAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         qualitySpinner.setAdapter(qAdapter);
         String prefQ = StorageSettings.getPreferredQuality(this);
@@ -870,7 +870,7 @@ public class MainActivity extends BaseActivity {
         String[] langs = {"jpn", "eng"};
         String[] langLabels = {"Sub (Japanese)", "Dub (English)"};
         ArrayAdapter<String> lAdapter = new ArrayAdapter<>(this,
-                R.layout.spinner_value_chevron, langLabels);
+                R.layout.spinner_value_chevron, android.R.id.text1, langLabels);
         lAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         langSpinner.setAdapter(lAdapter);
         String prefLang = StorageSettings.getPreferredLanguage(this);
