@@ -922,6 +922,14 @@ public class MainActivity extends BaseActivity {
             });
         }
 
+        // About section -> open About page
+        View aboutSection = findViewById(R.id.about_section);
+        if (aboutSection != null) {
+            aboutSection.setOnClickListener(v -> {
+                startActivity(new Intent(MainActivity.this, AboutActivity.class));
+            });
+        }
+
         // Developer info section -> open Developer page
         View devInfo = findViewById(R.id.dev_info_section);
         if (devInfo != null) {
