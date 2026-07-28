@@ -25,6 +25,8 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -59,6 +61,7 @@ public class MainActivity extends BaseActivity {
     private ProgressBar loadingBar;
     private TextView emptyText;
     private AnimeGridAdapter gridAdapter;
+    private SwipeRefreshLayout swipeRefresh;
     private final MiruClient client = MiruClient.getInstance();
 
     // Downloads
@@ -178,6 +181,19 @@ public class MainActivity extends BaseActivity {
         loadingBar = findViewById(R.id.loading_bar);
         emptyText = findViewById(R.id.empty_text);
 
+
+        swipeRefresh = findViewById(R.id.swipe_refresh);
+        swipeRefresh.setColorSchemeResources(R.color.primary, R.color.primary_dark);
+        swipeRefresh.setProgressBackgroundColorSchemeResource(R.color.surface_variant);
+        swipeRefresh.setOnRefreshListener(() -> {
+            String q = searchInput.getText().toString().trim();
+            if (q.isEmpty()) {
+                loadPopular();
+            } else {
+                searchAnime(q);
+            }
+        });
+
         gridAdapter = new AnimeGridAdapter(anime -> {
             // Show detail bottom sheet
             showAnimeDetail(anime);
@@ -216,6 +232,7 @@ public class MainActivity extends BaseActivity {
                 List<AnimeItem> results = client.browseCurrentlyAiring();
                 handler.post(() -> {
                     loadingBar.setVisibility(View.GONE);
+                    swipeRefresh.setRefreshing(false);
                     if (results != null && !results.isEmpty()) {
                         gridAdapter.setItems(results);
                     } else {
@@ -226,6 +243,7 @@ public class MainActivity extends BaseActivity {
             } catch (Exception e) {
                 handler.post(() -> {
                     loadingBar.setVisibility(View.GONE);
+                    swipeRefresh.setRefreshing(false);
                     emptyText.setText("Error loading");
                     emptyText.setVisibility(View.VISIBLE);
                 });
@@ -241,6 +259,7 @@ public class MainActivity extends BaseActivity {
                 List<AnimeItem> results = client.search(query);
                 handler.post(() -> {
                     loadingBar.setVisibility(View.GONE);
+                    swipeRefresh.setRefreshing(false);
                     gridAdapter.setItems(results);
                     if (results.isEmpty()) {
                         emptyText.setText(R.string.no_results);
@@ -250,6 +269,7 @@ public class MainActivity extends BaseActivity {
             } catch (Exception e) {
                 handler.post(() -> {
                     loadingBar.setVisibility(View.GONE);
+                    swipeRefresh.setRefreshing(false);
                     emptyText.setText("Error: " + e.getMessage());
                     emptyText.setVisibility(View.VISIBLE);
                 });
@@ -814,7 +834,7 @@ public class MainActivity extends BaseActivity {
 
         int currentParallel = StorageSettings.getParallelSegments(this);
         parallelBar.setProgress(currentParallel);
-        parallelValue.setText(String.valueOf(currentParallel));
+        parallelValue.setText(currentParallel + " segments");
 
         parallelBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onStartTrackingTouch(SeekBar bar) {}
@@ -823,7 +843,7 @@ public class MainActivity extends BaseActivity {
             public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
                 if (fromUser) {
                     int val = Math.max(1, progress);
-                    parallelValue.setText(String.valueOf(val));
+                    parallelValue.setText(val + " segments");
                     StorageSettings.setParallelSegments(MainActivity.this, val);
                 }
             }
@@ -862,6 +882,20 @@ public class MainActivity extends BaseActivity {
             @Override public void onNothingSelected(AdapterView<?> p) {}
         });
 
+        // Theme toggle
+        androidx.appcompat.widget.SwitchCompat themeSwitch = findViewById(R.id.theme_switch);
+        TextView themeLabel = findViewById(R.id.theme_label);
+        if (themeSwitch != null && themeLabel != null) {
+            boolean isDark = StorageSettings.isDarkTheme(this);
+            themeSwitch.setChecked(isDark);
+            themeLabel.setText(isDark ? "Dark theme" : "Light theme");
+            themeSwitch.setOnCheckedChangeListener((btn, isChecked) -> {
+                StorageSettings.setDarkTheme(MainActivity.this, isChecked);
+                // Recreate to apply theme
+                recreate();
+            });
+        }
+
         // GitHub link in Developer section
         View githubLink = findViewById(R.id.id_github_link);
         if (githubLink != null) {
@@ -887,11 +921,18 @@ public class MainActivity extends BaseActivity {
     }
 
     private void pickFolder() {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION |
-                Intent.FLAG_GRANT_WRITE_URI_PERMISSION |
-                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-        folderPicker.launch(intent);
+        new AlertDialog.Builder(this)
+                .setTitle("Change download folder")
+                .setMessage("This will move future downloads to the new folder. Already downloaded files will not be moved.")
+                .setPositiveButton("Change", (d, w) -> {
+                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION |
+                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION |
+                            Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                    folderPicker.launch(intent);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void updateFolderDisplay() {

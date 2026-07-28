@@ -30,19 +30,38 @@
             android:textColor="@color/text_primary"
             android:textSize="17sp" />
 
-        <TextView
-            android:id="@+id/btn_clear_finished"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:background="@drawable/bg_icon_circle"
-            android:text="@string/clear_finished"
-            android:textColor="@color/primary"
-            android:textSize="13sp"
-            android:padding="8dp"
-            android:clickable="true"
-            android:focusable="true" />
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/btn_sort"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_sort"
+                android:background="@drawable/bg_icon_circle"
+                android:tint="@color/primary"
+                android:padding="8dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btn_clear_finished"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_icon_circle"
+                android:text="@string/clear_finished"
+                android:textColor="@color/primary"
+                android:textSize="13sp"
+                android:padding="8dp"
+                android:layout_marginStart="4dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
 
     </RelativeLayout>
 

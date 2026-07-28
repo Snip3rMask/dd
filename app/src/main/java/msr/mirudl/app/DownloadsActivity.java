@@ -23,6 +23,7 @@ public class DownloadsActivity extends BaseActivity {
     private TextView emptyText;
     private DownloadAdapter downloadAdapter;
 
+    private boolean sortByAnime = true;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable refreshTask = new Runnable() {
         @Override
@@ -39,6 +40,10 @@ public class DownloadsActivity extends BaseActivity {
 
         findViewById(R.id.btn_back).setOnClickListener(v -> finish());
         findViewById(R.id.btn_clear_finished).setOnClickListener(v -> clearFinished());
+        findViewById(R.id.btn_sort).setOnClickListener(v -> {
+            sortByAnime = !sortByAnime;
+            refresh();
+        });
 
         downloadsList = findViewById(R.id.downloads_list);
         emptyText = findViewById(R.id.empty_text);
@@ -126,6 +131,15 @@ public class DownloadsActivity extends BaseActivity {
     private void refresh() {
         List<DownloadManager.Job> active = DownloadManager.snapshot();
         List<DownloadEntryStore.Entry> completed = DownloadEntryStore.all(this);
+
+        // Sort by anime name if mode is 'by anime'
+        if (sortByAnime && completed != null) {
+            completed.sort((a, b) -> {
+                int cmp = a.parentName().compareToIgnoreCase(b.parentName());
+                if (cmp == 0) return Long.compare(b.completedAt, a.completedAt);
+                return cmp;
+            });
+        }
 
         boolean hasActive = false;
         for (DownloadManager.Job j : active) {

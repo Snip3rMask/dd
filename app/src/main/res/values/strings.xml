@@ -36,4 +36,6 @@
     <string name="app_version">Version 1.0.0</string>
     <string name="developer_name">msrofficial</string>
     <string name="github_url">https://github.com/msrofficial/MiruDL-App</string>
+    <string name="theme">Theme</string>
+    <string name="theme_label">Dark theme</string>
 </resources>

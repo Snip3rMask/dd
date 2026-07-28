@@ -54,6 +54,18 @@ public final class StorageSettings {
                 .edit().putString(KEY_LANGUAGE, lang).apply();
     }
 
+    private static final String KEY_DARK_THEME = "dark_theme";
+
+    public static boolean isDarkTheme(Context context) {
+        return context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+                .getBoolean(KEY_DARK_THEME, true);
+    }
+
+    public static void setDarkTheme(Context context, boolean dark) {
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+                .edit().putBoolean(KEY_DARK_THEME, dark).apply();
+    }
+
     public static boolean hasDownloadUri(Context context) {
         return getDownloadUri(context) != null;
     }

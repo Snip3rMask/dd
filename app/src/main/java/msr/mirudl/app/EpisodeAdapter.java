@@ -14,6 +14,7 @@ import java.util.List;
 public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.ViewHolder> {
     private List<EpisodeItem> items = new ArrayList<>();
     private final OnEpisodeClickListener listener;
+    private java.util.Set<String> downloadedEpisodes = new java.util.HashSet<>();
 
     public interface OnEpisodeClickListener {
         void onClick(EpisodeItem episode);
@@ -25,6 +26,11 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.ViewHold
 
     public void setItems(List<EpisodeItem> items) {
         this.items = items != null ? items : new ArrayList<>();
+        notifyDataSetChanged();
+    }
+
+    public void setDownloadedEpisodes(java.util.Set<String> downloaded) {
+        this.downloadedEpisodes = downloaded != null ? downloaded : new java.util.HashSet<>();
         notifyDataSetChanged();
     }
 
@@ -47,6 +53,13 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.ViewHold
             h.title.setTextColor(0xFFFAFAFA);
         }
         h.downloadIcon.setVisibility(View.VISIBLE);
+        if (downloadedEpisodes.contains(ep.getLabel())) {
+            h.downloadIcon.setImageResource(R.drawable.ic_check);
+            h.downloadIcon.setColorFilter(0xFF4ADE80);
+        } else {
+            h.downloadIcon.setImageResource(R.drawable.ic_download);
+            h.downloadIcon.setColorFilter(0xFF38BDF8);
+        }
         h.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onClick(ep);
         });

@@ -51,7 +51,7 @@
             android:layout_height="24dp"
             android:src="@drawable/ic_delete"
             android:background="@drawable/bg_icon_circle"
-            android:tint="@color/text_tertiary"
+            android:tint="@color/error"
             android:padding="4dp" />
 
     </LinearLayout>

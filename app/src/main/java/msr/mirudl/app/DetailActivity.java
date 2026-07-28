@@ -93,6 +93,19 @@ public class DetailActivity extends BaseActivity {
         episodeList.setLayoutManager(new LinearLayoutManager(this));
         episodeList.setAdapter(adapter);
 
+        // Load downloaded episodes for status indicator
+        java.util.Set<String> downloaded = new java.util.HashSet<>();
+        for (DownloadEntryStore.Entry e : DownloadEntryStore.all(this)) {
+            if (animeTitle != null && animeTitle.equals(e.parentName())) {
+                // Extract episode number from title like "Episode 1"
+                String epLabel = e.title.replace("Episode ", "").trim();
+                if (!epLabel.isEmpty()) {
+                    downloaded.add(epLabel);
+                }
+            }
+        }
+        adapter.setDownloadedEpisodes(downloaded);
+
         loadEpisodes();
         loadDetails();
     }
@@ -108,6 +121,56 @@ public class DetailActivity extends BaseActivity {
                         titleText.setText(finalTitle);
                         TextView tv = findViewById(R.id.detail_title_text);
                         if (tv != null) tv.setText(finalTitle);
+                    });
+                }
+                // Fetch full anime details (description, meta, status)
+                JSONObject details = client.getAnimeDetails(animeId);
+                if (details != null) {
+                    handler.post(() -> {
+                        String desc = details.optString("description", "");
+                        if (desc.isEmpty()) desc = details.optString("synopsis", "");
+                        if (!desc.isEmpty()) {
+                            detailDesc.setText(desc);
+                            // Setup Read more toggle
+                            TextView btnReadMore = findViewById(R.id.btn_read_more);
+                            if (btnReadMore != null) {
+                                detailDesc.setMaxLines(4);
+                                detailDesc.setEllipsize(android.text.TextUtils.TruncateAt.END);
+                                detailDesc.post(() -> {
+                                    if (detailDesc.getLineCount() > 4) {
+                                        btnReadMore.setVisibility(View.VISIBLE);
+                                        btnReadMore.setOnClickListener(v -> {
+                                            if (detailDesc.getMaxLines() == 4) {
+                                                detailDesc.setMaxLines(Integer.MAX_VALUE);
+                                                detailDesc.setEllipsize(null);
+                                                btnReadMore.setText("Show less");
+                                            } else {
+                                                detailDesc.setMaxLines(4);
+                                                detailDesc.setEllipsize(android.text.TextUtils.TruncateAt.END);
+                                                btnReadMore.setText("Read more");
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        }
+                        String meta = details.optString("meta", "");
+                        if (meta.isEmpty()) {
+                            StringBuilder sb = new StringBuilder();
+                            if (details.has("year")) sb.append(details.optString("year"));
+                            if (details.has("status")) {
+                                if (sb.length() > 0) sb.append(" · ");
+                                sb.append(details.optString("status"));
+                            }
+                            if (details.has("episodes") || details.has("episodeCount")) {
+                                if (sb.length() > 0) sb.append(" · ");
+                                sb.append(details.optString("episodes", details.optString("episodeCount", ""))).append(" eps");
+                            }
+                            meta = sb.toString();
+                        }
+                        if (!meta.isEmpty()) detailMeta.setText(meta);
+                        String status = details.optString("status", "");
+                        if (!status.isEmpty()) detailStatus.setText(status);
                     });
                 }
             } catch (Exception ignored) {}
