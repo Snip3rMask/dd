@@ -576,7 +576,7 @@
                         android:layout_height="40dp"
                         android:background="@drawable/bg_icon_square"
                         android:padding="8dp"
-                        android:src="@drawable/ic_launcher"
+                        android:src="@mipmap/ic_launcher_foreground"
                         android:tint="@color/primary" />
 
                     <LinearLayout
