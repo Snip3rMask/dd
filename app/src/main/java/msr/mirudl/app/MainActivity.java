@@ -53,6 +53,7 @@ import java.util.Set;
 public class MainActivity extends BaseActivity {
     // Tabs
     private View tabHome, tabDownloads, tabSettings;
+    private int currentTab = 0;
     private BottomNavigationView bottomNav;
 
     // Home
@@ -122,6 +123,12 @@ public class MainActivity extends BaseActivity {
         }
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt("current_tab", currentTab);
+    }
+
     private void onCreateInternal(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -157,17 +164,27 @@ public class MainActivity extends BaseActivity {
         // Init Settings tab
         initSettingsTab();
 
-        // Start on Home
-        showTab(0);
-        loadPopular();
+        // Restore tab from saved state, or start on Home
+        int restoreTab = 0;
+        if (savedInstanceState != null) {
+            restoreTab = savedInstanceState.getInt("current_tab", 0);
+        }
+        showTab(restoreTab);
+        if (restoreTab == 0) loadPopular();
     }
 
     // ============ TAB SWITCHING ============
 
     private void showTab(int tab) {
+        currentTab = tab;
         tabHome.setVisibility(tab == 0 ? View.VISIBLE : View.GONE);
         tabDownloads.setVisibility(tab == 1 ? View.VISIBLE : View.GONE);
         tabSettings.setVisibility(tab == 2 ? View.VISIBLE : View.GONE);
+
+        // Sync bottom nav selection
+        if (tab == 0) bottomNav.setSelectedItemId(R.id.nav_home);
+        else if (tab == 1) bottomNav.setSelectedItemId(R.id.nav_downloads);
+        else if (tab == 2) bottomNav.setSelectedItemId(R.id.nav_settings);
 
         if (tab == 1) refreshDownloads();
         if (tab == 2) updateFolderDisplay();
