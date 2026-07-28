@@ -73,13 +73,13 @@ _(Add your screenshots here)_
 
 ## Download
 
-<a href="https://github.com/Snip3rMask/dd/releases/latest">
-  <img src="https://img.shields.io/badge/Download%20APK-Latest%20Release-4ADE80?style=for-the-badge&logo=android" alt="Download Latest APK">
-</a>
-
-Grab the latest APK from the link above and install it on your Android device.
-
-> **Minimum requirement:** Android 5.0 (API 21) or higher.
+<p align="center">
+  <a href="https://github.com/Snip3rMask/dd/releases/latest">
+    <img src="https://img.shields.io/badge/Download%20APK-Download%20Latest-1a8a1a?style=for-the-badge&logo=android&logoColor=white&labelColor=2ea043" alt="Download Latest APK">
+  </a>
+  <br>
+  <sub><b>Compatible with Android 5.0 (API 21) and above</b></sub>
+</p>
 
 ---
 
