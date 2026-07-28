@@ -157,6 +157,11 @@ public class MainActivity extends BaseActivity {
             return false;
         });
 
+        // Tap MiruDL title to open About page
+        findViewById(R.id.toolbar_title).setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, AboutActivity.class));
+        });
+
         // Init Home tab
         initHomeTab();
 
@@ -914,6 +919,14 @@ public class MainActivity extends BaseActivity {
                 StorageSettings.setDarkTheme(MainActivity.this, isChecked);
                 // Recreate to apply theme
                 recreate();
+            });
+        }
+
+        // Developer info section -> open Developer page
+        View devInfo = findViewById(R.id.dev_info_section);
+        if (devInfo != null) {
+            devInfo.setOnClickListener(v -> {
+                startActivity(new Intent(MainActivity.this, DeveloperActivity.class));
             });
         }
 

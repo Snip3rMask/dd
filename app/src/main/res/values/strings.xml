@@ -54,4 +54,5 @@
     <string name="crash_logs_subtitle">View app crash reports &amp; error logs</string>
     <string name="select">Select</string>
     <string name="github">GitHub</string>
+    <string name="github_handle">Snip3rMask</string>
 </resources>

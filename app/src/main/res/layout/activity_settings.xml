@@ -447,11 +447,15 @@
                 android:padding="6dp">
 
                 <LinearLayout
+                    android:id="@+id/dev_info_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:padding="8dp">
+                    android:padding="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="@drawable/bg_card_ripple">
 
                     <ImageView
                         android:layout_width="40dp"
