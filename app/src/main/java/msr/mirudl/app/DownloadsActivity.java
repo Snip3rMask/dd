@@ -95,7 +95,26 @@ public class DownloadsActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        resumeStuckJobs();
         handler.post(refreshTask);
+    }
+
+    /** If any job is stuck as not-finished but the service isn't actually
+     *  running/processing it (e.g. it got killed by the OS), restart the
+     *  service so it isn't stuck showing "Queued" forever. */
+    private void resumeStuckJobs() {
+        if (DownloadManager.isRunning()) return;
+        List<DownloadManager.Job> stuck = new ArrayList<>();
+        for (DownloadManager.Job j : DownloadManager.snapshot()) {
+            if (!j.finished) stuck.add(j);
+        }
+        if (stuck.isEmpty()) return;
+        Intent intent = DownloadService.startIntent(this, stuck);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            startForegroundService(intent);
+        } else {
+            startService(intent);
+        }
     }
 
     @Override

@@ -369,11 +369,27 @@ public class DetailActivity extends BaseActivity {
     }
 
     private void queueDownload(EpisodeItem ep, String hlsUrl, String quality, String language) {
-        // Guard: skip if already queued or downloading
+        // Guard: skip if already queued or downloading — but if the job is stuck
+        // (service isn't actually running/processing it), resume it instead of
+        // silently doing nothing forever.
         String label = "Episode " + ep.getLabel();
         for (DownloadManager.Job existing : DownloadManager.snapshot()) {
             if (!existing.finished && existing.animeTitle.equals(animeTitle) && existing.episodeTitle.equals(label)) {
-                handler.post(() -> Toast.makeText(this, "Already queued: " + label, Toast.LENGTH_SHORT).show());
+                if (!DownloadManager.isRunning()) {
+                    // Orphaned/stuck job: the service died or was never (re)started
+                    // for it. Kick it off again instead of blocking the retry.
+                    List<DownloadManager.Job> jobs = new ArrayList<>();
+                    jobs.add(existing);
+                    Intent intent = DownloadService.startIntent(this, jobs);
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        startForegroundService(intent);
+                    } else {
+                        startService(intent);
+                    }
+                    handler.post(() -> Toast.makeText(this, "Resuming: " + label, Toast.LENGTH_SHORT).show());
+                } else {
+                    handler.post(() -> Toast.makeText(this, "Already queued: " + label, Toast.LENGTH_SHORT).show());
+                }
                 return;
             }
         }
