@@ -13,7 +13,11 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Android-21%2B-3DDC84?logo=android" alt="Android 21+">
   <img src="https://img.shields.io/badge/API-34-blue" alt="API 34">
-  <img src="https://img.shields.io/badge/license-MIT-yellow" alt="MIT License">
+  <img src="https://img.shields.io/github/downloads/Snip3rMask/dd/total?color=blueviolet" alt="Downloads">
+  <img src="https://img.shields.io/github/v/release/Snip3rMask/dd?color=success" alt="Latest Release">
+  <img src="https://img.shields.io/github/last-commit/Snip3rMask/dd?color=orange" alt="Last Commit">
+  <br>
+  <img src="https://hits.sh/github.com/Snip3rMask/dd.svg?label=Visitors&color=informational" alt="Visitors">
 </p>
 
 ---
@@ -88,12 +92,6 @@ Download the latest APK from the [Releases](https://github.com/Snip3rMask/dd/rel
 ## Contributing
 
 This app is currently **not open source** for contributions. We plan to make it open source in the future. When that happens, everyone will be welcome to contribute. Stay tuned!
-
----
-
-## License
-
-This project is open source. Feel free to use, modify, and share.
 
 ---
 
