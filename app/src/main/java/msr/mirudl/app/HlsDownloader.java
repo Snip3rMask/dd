@@ -171,9 +171,11 @@ public final class HlsDownloader {
         AtomicLong totalBytes = new AtomicLong(0);
         int total = urls.size();
 
-        // Live speed sampler: measures bytes downloaded every 700ms to compute a KB/s or MB/s rate
+        // Live speed sampler: measures bytes downloaded every 700ms and smooths the
+        // reading with a moving average so it doesn't flicker between segment bursts
         ScheduledExecutorService speedTicker = Executors.newSingleThreadScheduledExecutor();
         final long[] lastSample = {System.currentTimeMillis(), 0L};
+        final double[] smoothedSpeed = {-1};
         speedTicker.scheduleAtFixedRate(() -> {
             long now = System.currentTimeMillis();
             long bytesNow = totalBytes.get();
@@ -182,7 +184,11 @@ public final class HlsDownloader {
             lastSample[0] = now;
             lastSample[1] = bytesNow;
             if (elapsedMs > 0 && progress != null) {
-                progress.onSpeed((deltaBytes * 1000) / elapsedMs);
+                double instant = (deltaBytes * 1000.0) / elapsedMs;
+                smoothedSpeed[0] = (smoothedSpeed[0] < 0)
+                        ? instant
+                        : (0.35 * instant + 0.65 * smoothedSpeed[0]);
+                progress.onSpeed((long) smoothedSpeed[0]);
             }
         }, 700, 700, TimeUnit.MILLISECONDS);
 
