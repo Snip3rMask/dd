@@ -12,6 +12,7 @@ public class EpisodeItem implements Serializable {
     public String hlsUrl;
     public String language;
     public String langName;
+    public transient boolean selected;
 
     public EpisodeItem() {}
 

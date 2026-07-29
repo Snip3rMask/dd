@@ -15,8 +15,13 @@ import android.widget.TextView;
 import android.graphics.drawable.GradientDrawable;
 import android.widget.Toast;
 
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.widget.EditText;
+import android.text.Editable;
+import android.text.TextWatcher;
 
 import com.bumptech.glide.Glide;
 
@@ -28,11 +33,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class DetailActivity extends BaseActivity {
+    private static final int GRID_THRESHOLD = 40; // switch to numeric grid beyond this many episodes
+    private static final int GRID_SPAN = 5;
+
     private String animeId, animeTitle, animeThumb;
     private RecyclerView episodeList;
     private ProgressBar loadingBar;
     private TextView titleText, emptyText, episodeCount, detailMeta, detailDesc, detailStatus;
     private EpisodeAdapter adapter;
+
+    private View episodeSearchRow, selectBar, btnDownloadAll;
+    private EditText episodeSearchInput;
+    private ImageView btnEpSearch, btnEpReverse;
+    private TextView btnEpSelect, selectCountText, btnDownloadSelected;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -57,6 +70,16 @@ public class DetailActivity extends BaseActivity {
         detailDesc = findViewById(R.id.detail_description);
         detailStatus = findViewById(R.id.detail_status);
 
+        episodeSearchRow = findViewById(R.id.episode_search_row);
+        episodeSearchInput = findViewById(R.id.episode_search_input);
+        selectBar = findViewById(R.id.select_bar);
+        btnDownloadAll = findViewById(R.id.btn_download_all);
+        btnEpSearch = findViewById(R.id.btn_ep_search);
+        btnEpReverse = findViewById(R.id.btn_ep_reverse);
+        btnEpSelect = findViewById(R.id.btn_ep_select);
+        selectCountText = findViewById(R.id.select_count_text);
+        btnDownloadSelected = findViewById(R.id.btn_download_selected);
+
         ImageView thumbView = findViewById(R.id.detail_thumb);
         TextView titleView = findViewById(R.id.detail_title_text);
 
@@ -70,7 +93,7 @@ public class DetailActivity extends BaseActivity {
         findViewById(R.id.btn_back).setOnClickListener(v -> finish());
 
         // Download All button
-        findViewById(R.id.btn_download_all).setOnClickListener(v -> {
+        btnDownloadAll.setOnClickListener(v -> {
             if (episodes.isEmpty()) {
                 Toast.makeText(this, "No episodes available", Toast.LENGTH_SHORT).show();
                 return;
@@ -82,29 +105,75 @@ public class DetailActivity extends BaseActivity {
             showDownloadAllDialog();
         });
 
-        adapter = new EpisodeAdapter(ep -> {
-            if (ep.hlsUrl != null) {
-                startDownload(ep);
-            } else {
-                resolveAndDownload(ep);
+        adapter = new EpisodeAdapter(new EpisodeAdapter.Listener() {
+            @Override
+            public void onClick(EpisodeItem ep) {
+                if (ep.hlsUrl != null) {
+                    startDownload(ep);
+                } else {
+                    resolveAndDownload(ep);
+                }
+            }
+
+            @Override
+            public void onSelectionChanged(int count) {
+                selectCountText.setText(count + " selected");
+                btnDownloadSelected.setAlpha(count > 0 ? 1f : 0.5f);
             }
         });
 
         episodeList.setLayoutManager(new LinearLayoutManager(this));
         episodeList.setAdapter(adapter);
 
-        // Load downloaded episodes for status indicator
-        java.util.Set<String> downloaded = new java.util.HashSet<>();
-        for (DownloadEntryStore.Entry e : DownloadEntryStore.all(this)) {
-            if (animeTitle != null && animeTitle.equals(e.parentName())) {
-                // Extract episode number from title like "Episode 1"
-                String epLabel = e.title.replace("Episode ", "").trim();
-                if (!epLabel.isEmpty()) {
-                    downloaded.add(epLabel);
-                }
+        // Search toggle
+        btnEpSearch.setOnClickListener(v -> {
+            boolean showing = episodeSearchRow.getVisibility() == View.VISIBLE;
+            if (showing) {
+                episodeSearchRow.setVisibility(View.GONE);
+                episodeSearchInput.setText("");
+                adapter.setQuery("");
+                btnEpSearch.setColorFilter(getColor(R.color.text_secondary));
+            } else {
+                episodeSearchRow.setVisibility(View.VISIBLE);
+                episodeSearchInput.requestFocus();
+                btnEpSearch.setColorFilter(getColor(R.color.primary));
             }
-        }
-        adapter.setDownloadedEpisodes(downloaded);
+        });
+        episodeSearchInput.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void afterTextChanged(Editable s) {
+                adapter.setQuery(s.toString());
+            }
+        });
+
+        // Reverse order toggle (e.g. useful to grab the newest episodes of a long-running anime first)
+        btnEpReverse.setOnClickListener(v -> {
+            boolean nowReversed = !adapter.isReversed();
+            adapter.setReversed(nowReversed);
+            btnEpReverse.setColorFilter(getColor(nowReversed ? R.color.primary : R.color.text_secondary));
+        });
+
+        // Multi-select toggle
+        btnEpSelect.setOnClickListener(v -> enterSelectionMode());
+        findViewById(R.id.btn_select_close).setOnClickListener(v -> exitSelectionMode());
+        findViewById(R.id.btn_select_all).setOnClickListener(v -> adapter.selectAllVisible());
+        btnDownloadSelected.setOnClickListener(v -> {
+            List<EpisodeItem> selected = adapter.getSelectedEpisodes();
+            if (selected.isEmpty()) {
+                Toast.makeText(this, "Select at least one episode", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (!StorageSettings.hasDownloadUri(this)) {
+                showFolderRequiredDialog();
+                return;
+            }
+            downloadSelectedEpisodes(selected);
+            exitSelectionMode();
+        });
+
+        // Load downloaded episodes for status indicator
+        adapter.setDownloadedEpisodes(currentDownloadedSet());
 
         loadEpisodes();
         loadDetails();
@@ -186,7 +255,14 @@ public class DetailActivity extends BaseActivity {
                     loadingBar.setVisibility(View.GONE);
                     String count = episodes.size() + " episodes";
                     episodeCount.setText(count);
+
+                    boolean gridMode = episodes.size() > GRID_THRESHOLD;
+                    episodeList.setLayoutManager(gridMode
+                            ? new GridLayoutManager(this, GRID_SPAN)
+                            : new LinearLayoutManager(this));
+                    adapter.setGridMode(gridMode);
                     adapter.setItems(episodes);
+
                     if (episodes.isEmpty()) {
                         emptyText.setVisibility(View.VISIBLE);
                     }
@@ -475,32 +551,49 @@ public class DetailActivity extends BaseActivity {
     }
 
     private void downloadAllEpisodes() {
+        enqueueEpisodes(episodes, episodes.size() + " episodes queued");
+    }
+
+    /** Queues downloads for a specific subset of episodes (used by multi-select download). */
+    private void downloadSelectedEpisodes(List<EpisodeItem> selected) {
+        enqueueEpisodes(selected, selected.size() + " episode(s) queued");
+    }
+
+    private void enqueueEpisodes(List<EpisodeItem> list, String successMessage) {
         executor.execute(() -> {
             try {
                 List<DownloadManager.Job> jobs = new ArrayList<>();
                 String prefLang = StorageSettings.getPreferredLanguage(this);
 
-                for (EpisodeItem ep : episodes) {
+                for (EpisodeItem ep : list) {
                     try {
-                        List<VideoSource> langs = client.getEpisodeLanguages(ep.id);
-                        VideoSource selected = null;
-                        for (VideoSource vs : langs) {
-                            if (vs.language.equals(prefLang)) { selected = vs; break; }
+                        String hlsUrl = ep.hlsUrl;
+                        String language = ep.language;
+                        String langName = ep.langName;
+
+                        if (hlsUrl == null) {
+                            List<VideoSource> langs = client.getEpisodeLanguages(ep.id);
+                            VideoSource selected = null;
+                            for (VideoSource vs : langs) {
+                                if (vs.language.equals(prefLang)) { selected = vs; break; }
+                            }
+                            if (selected == null && !langs.isEmpty()) selected = langs.get(0);
+                            if (selected == null) continue;
+
+                            hlsUrl = client.resolveHlsFromEmbed(selected.url);
+                            if (hlsUrl == null) continue;
+
+                            language = selected.language;
+                            langName = selected.quality;
+                            ep.hlsUrl = hlsUrl;
+                            ep.language = language;
+                            ep.langName = langName;
                         }
-                        if (selected == null && !langs.isEmpty()) selected = langs.get(0);
-                        if (selected == null) continue;
-
-                        String hlsUrl = client.resolveHlsFromEmbed(selected.url);
-                        if (hlsUrl == null) continue;
-
-                        ep.hlsUrl = hlsUrl;
-                        ep.language = selected.language;
-                        ep.langName = selected.quality;
 
                         DownloadManager.Job job = DownloadManager.enqueue(
                                 animeTitle, "Episode " + ep.getLabel(),
                                 StorageSettings.getPreferredQuality(this),
-                                selected.language, hlsUrl
+                                language != null ? language : "jpn", hlsUrl
                         );
                         jobs.add(job);
                     } catch (Exception ignored) {}
@@ -515,13 +608,50 @@ public class DetailActivity extends BaseActivity {
                     }
                     handler.post(() -> {
                         adapter.notifyDataSetChanged();
-                        Toast.makeText(this, jobs.size() + " episodes queued", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, successMessage, Toast.LENGTH_SHORT).show();
                     });
                 }
             } catch (Exception e) {
                 handler.post(() -> Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
             }
         });
+    }
+
+    private void enterSelectionMode() {
+        adapter.setSelectionMode(true);
+        selectCountText.setText("0 selected");
+        btnDownloadSelected.setAlpha(0.5f);
+        selectBar.setVisibility(View.VISIBLE);
+        btnDownloadAll.setVisibility(View.GONE);
+        btnEpSelect.setVisibility(View.GONE);
+    }
+
+    private void exitSelectionMode() {
+        adapter.setSelectionMode(false);
+        selectBar.setVisibility(View.GONE);
+        btnDownloadAll.setVisibility(View.VISIBLE);
+        btnEpSelect.setVisibility(View.VISIBLE);
+    }
+
+    /** Rebuilds the set of already-downloaded episode labels for this anime. */
+    private java.util.Set<String> currentDownloadedSet() {
+        java.util.Set<String> downloaded = new java.util.HashSet<>();
+        for (DownloadEntryStore.Entry e : DownloadEntryStore.all(this)) {
+            if (animeTitle != null && animeTitle.equals(e.parentName())) {
+                String epLabel = e.title.replace("Episode ", "").trim();
+                if (!epLabel.isEmpty()) downloaded.add(epLabel);
+            }
+        }
+        return downloaded;
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (adapter != null && adapter.isSelectionMode()) {
+            exitSelectionMode();
+            return;
+        }
+        super.onBackPressed();
     }
 
     private int dp(int dp) {
