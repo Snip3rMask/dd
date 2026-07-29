@@ -164,17 +164,25 @@ public class DownloadService extends Service {
                             this, playUrl,
                             job.animeTitle + " - " + job.episodeTitle,
                             StorageSettings.getParallelSegments(this),
-                            (percent, done, total) -> {
-                                try {
-                                    DownloadManager.update(currentJob, percent, DownloadManager.STATUS_DOWNLOADING);
-                                    currentJob.percent = percent;
-                                    long now = System.currentTimeMillis();
-                                    if (now - lastNotifTime[0] >= 500) {
-                                        lastNotifTime[0] = now;
-                                        String info = getBatchInfo(fJobIndex, fTotalActive);
-                                        pushNotif(buildNotif(currentJob, info + " " + percent + "%", percent, false));
-                                    }
-                                } catch (Exception ignored) {}
+                            new HlsDownloader.ProgressListener() {
+                                @Override
+                                public void onProgress(int percent, int done, int total) {
+                                    try {
+                                        DownloadManager.update(currentJob, percent, DownloadManager.STATUS_DOWNLOADING);
+                                        currentJob.percent = percent;
+                                        long now = System.currentTimeMillis();
+                                        if (now - lastNotifTime[0] >= 500) {
+                                            lastNotifTime[0] = now;
+                                            String info = getBatchInfo(fJobIndex, fTotalActive);
+                                            pushNotif(buildNotif(currentJob, info + " " + percent + "%", percent, false));
+                                        }
+                                    } catch (Exception ignored) {}
+                                }
+
+                                @Override
+                                public void onSpeed(long bytesPerSecond) {
+                                    currentJob.bytesPerSecond = bytesPerSecond;
+                                }
                             },
                             () -> currentJob.cancelled
                     );

@@ -397,7 +397,13 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private void bindActive(ActiveHolder h, DownloadManager.Job job) {
         h.animeTv.setText(job.animeTitle != null ? job.animeTitle : "");
         h.epTv.setText(job.episodeTitle != null ? job.episodeTitle : "");
-        h.statusTv.setText(job.status != null ? job.status : "");
+
+        String base = job.status != null ? job.status : "";
+        String speed = formatSpeed(job.bytesPerSecond);
+        String statusText = base + "  \u2022  " + job.percent + "%";
+        if (!speed.isEmpty()) statusText += "  \u2022  " + speed;
+        h.statusTv.setText(statusText);
+
         h.progress.setProgress(Math.max(0, Math.min(100, job.percent)));
         h.cancelBtn.setOnClickListener(v -> {
             if (listener != null) listener.onCancel(job);
@@ -506,6 +512,13 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         if (bytes < 1024 * 1024 * 1024)
             return String.format(Locale.US, "%.1f MB", bytes / (1024.0 * 1024.0));
         return String.format(Locale.US, "%.1f GB", bytes / (1024.0 * 1024.0 * 1024.0));
+    }
+
+    private String formatSpeed(long bytesPerSecond) {
+        if (bytesPerSecond <= 0) return "";
+        double kb = bytesPerSecond / 1024.0;
+        if (kb < 1024) return String.format(Locale.US, "%.0f KB/s", kb);
+        return String.format(Locale.US, "%.1f MB/s", kb / 1024.0);
     }
 
     private String formatDate(long millis) {

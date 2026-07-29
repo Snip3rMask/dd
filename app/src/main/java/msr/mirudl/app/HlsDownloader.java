@@ -15,8 +15,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -36,6 +38,8 @@ public final class HlsDownloader {
 
     public interface ProgressListener {
         void onProgress(int percent, int downloaded, int total);
+        /** Called periodically with the current live download speed in bytes/sec. */
+        default void onSpeed(long bytesPerSecond) {}
     }
 
     public interface CancelCheck {
@@ -164,11 +168,28 @@ public final class HlsDownloader {
                                           ProgressListener progress, CancelCheck cancel) {
         ExecutorService executor = Executors.newFixedThreadPool(parallel);
         AtomicInteger done = new AtomicInteger(0);
+        AtomicLong totalBytes = new AtomicLong(0);
         int total = urls.size();
+
+        // Live speed sampler: measures bytes downloaded every 700ms to compute a KB/s or MB/s rate
+        ScheduledExecutorService speedTicker = Executors.newSingleThreadScheduledExecutor();
+        final long[] lastSample = {System.currentTimeMillis(), 0L};
+        speedTicker.scheduleAtFixedRate(() -> {
+            long now = System.currentTimeMillis();
+            long bytesNow = totalBytes.get();
+            long elapsedMs = now - lastSample[0];
+            long deltaBytes = bytesNow - lastSample[1];
+            lastSample[0] = now;
+            lastSample[1] = bytesNow;
+            if (elapsedMs > 0 && progress != null) {
+                progress.onSpeed((deltaBytes * 1000) / elapsedMs);
+            }
+        }, 700, 700, TimeUnit.MILLISECONDS);
 
         for (int i = 0; i < total; i++) {
             if (cancel != null && cancel.isCancelled()) {
                 executor.shutdownNow();
+                speedTicker.shutdownNow();
                 return;
             }
             final int idx = i;
@@ -176,6 +197,7 @@ public final class HlsDownloader {
                 if (cancel != null && cancel.isCancelled()) return;
                 try {
                     byte[] data = downloadBytes(urls.get(idx));
+                    totalBytes.addAndGet(data.length);
                     File out = new File(tempDir, "seg_" + idx + ".ts");
                     try (FileOutputStream fos = new FileOutputStream(out)) {
                         fos.write(data);
@@ -199,6 +221,9 @@ public final class HlsDownloader {
             }
         } catch (InterruptedException ignored) {
             executor.shutdownNow();
+        } finally {
+            speedTicker.shutdownNow();
+            if (progress != null) progress.onSpeed(0);
         }
     }
 

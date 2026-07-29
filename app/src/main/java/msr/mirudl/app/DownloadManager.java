@@ -45,6 +45,7 @@ public final class DownloadManager {
         public final String hlsUrl;
         public volatile int percent;
         public volatile String status;
+        public volatile long bytesPerSecond;
         public volatile boolean cancelled;
         public volatile boolean finished;
         public volatile String error;
@@ -130,6 +131,7 @@ public final class DownloadManager {
         job.percent = 100;
         job.status = STATUS_COMPLETED;
         job.finished = true;
+        job.bytesPerSecond = 0;
         job.outputUri = outputUri;
     }
 
@@ -138,6 +140,7 @@ public final class DownloadManager {
         job.error = error;
         job.status = error != null ? error : STATUS_FAILED;
         job.finished = true;
+        job.bytesPerSecond = 0;
     }
 
     public static synchronized void cancel(Job job) {
@@ -145,6 +148,7 @@ public final class DownloadManager {
         job.cancelled = true;
         job.status = STATUS_CANCELLED;
         job.finished = true;
+        job.bytesPerSecond = 0;
     }
 
     public static synchronized void remove(Job job) {
