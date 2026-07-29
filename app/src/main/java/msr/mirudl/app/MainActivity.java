@@ -989,7 +989,9 @@ public class MainActivity extends BaseActivity {
             Toast.makeText(this, "Saved to Downloads/" + fileName, Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(this, "Could not save file: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
+
     private String speedLabel(int parallel) {
         if (parallel <= 4) return "Slow";
         if (parallel <= 8) return "Normal";
