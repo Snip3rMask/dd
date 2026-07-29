@@ -48,7 +48,7 @@ jobs:
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/release.keystore
 
-      - name: Build debug & release APKs
+      - name: Build release APK
         env:
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -61,30 +61,9 @@ jobs:
           mkdir -p artifacts
           find app/build/outputs -name "*.apk" | while read f; do
             base=$(basename "$f")
-            # base looks like: app-arm64-v8a-release.apk
             newname="dd-${base#app-}"
             cp "$f" "artifacts/${newname}"
           done
-      - name: Upload APKs
-        uses: actions/upload-artifact@v4
-        with:
-          name: dd-APKs
-          path: artifacts/*.apk
-
-  release:
-    needs: [build]
-    runs-on: ubuntu-latest
-    if: >
-      success() &&
-      (startsWith(github.ref, 'refs/tags/v') ||
-       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-       github.event_name == 'workflow_dispatch')
-    steps:
-      - name: Download APKs
-        uses: actions/download-artifact@v4
-        with:
-          name: dd-APKs
-          path: artifacts
 
       - name: Generate release name
         id: name
