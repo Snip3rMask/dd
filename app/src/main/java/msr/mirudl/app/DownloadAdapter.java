@@ -398,11 +398,12 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         h.animeTv.setText(job.animeTitle != null ? job.animeTitle : "");
         h.epTv.setText(job.episodeTitle != null ? job.episodeTitle : "");
 
-        String base = job.status != null ? job.status : "";
         String speed = formatSpeed(job.bytesPerSecond);
-        String statusText = base + "  \u2022  " + job.percent + "%";
-        if (!speed.isEmpty()) statusText += "  \u2022  " + speed;
-        h.statusTv.setText(statusText);
+        h.speedTv.setText(speed);
+        h.speedTv.setVisibility(speed.isEmpty() ? View.GONE : View.VISIBLE);
+
+        String base = job.status != null ? job.status : "";
+        h.statusTv.setText(base + "  \u2022  " + job.percent + "%");
 
         h.progress.setProgress(Math.max(0, Math.min(100, job.percent)));
         h.cancelBtn.setOnClickListener(v -> {
@@ -450,7 +451,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     static class ActiveHolder extends RecyclerView.ViewHolder {
-        TextView animeTv, epTv, statusTv;
+        TextView animeTv, epTv, statusTv, speedTv;
         ProgressBar progress;
         ImageView cancelBtn;
         ActiveHolder(View v) {
@@ -458,6 +459,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             animeTv = v.findViewById(R.id.dl_anime);
             epTv = v.findViewById(R.id.dl_title);
             statusTv = v.findViewById(R.id.dl_status);
+            speedTv = v.findViewById(R.id.dl_speed);
             progress = v.findViewById(R.id.dl_progress);
             cancelBtn = v.findViewById(R.id.dl_cancel);
         }
