@@ -1,3 +1,6 @@
+# Keep original names (no obfuscation)
+-dontobfuscate
+
 # OkHttp
 -dontwarn okhttp3.**
 -dontwarn okio.**
