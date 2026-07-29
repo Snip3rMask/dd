@@ -366,17 +366,6 @@ public class MainActivity extends BaseActivity {
         }
         title.setText(anime.title != null ? anime.title : "Unknown");
 
-        // Fetch anime title
-        executor.execute(() -> {
-            try {
-                String remoteTitle = client.getAnimeTitle(anime.url != null ? anime.url : anime.id);
-                if (remoteTitle != null && !remoteTitle.isEmpty()) {
-                    String finalTitle = remoteTitle;
-                    handler.post(() -> title.setText(finalTitle));
-                }
-            } catch (Exception ignored) {}
-        });
-
         btnEpisodes.setOnClickListener(v -> {
             dialog.dismiss();
             Intent intent = new Intent(this, DetailActivity.class);
