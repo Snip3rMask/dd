@@ -170,6 +170,33 @@ public final class DownloadManager {
         return count;
     }
 
+    /** Atomically finds the next not-yet-started job and marks it as downloading,
+     *  so multiple concurrent worker lanes never pick the same job. */
+    public static synchronized Job claimNextQueuedJob() {
+        for (Job j : JOBS) {
+            if (!j.finished && STATUS_QUEUED.equals(j.status)) {
+                j.status = STATUS_DOWNLOADING;
+                j.percent = 0;
+                return j;
+            }
+        }
+        return null;
+    }
+
+    public static synchronized int queuedCount() {
+        int count = 0;
+        for (Job j : JOBS)
+            if (!j.finished && STATUS_QUEUED.equals(j.status)) count++;
+        return count;
+    }
+
+    public static synchronized int downloadingCount() {
+        int count = 0;
+        for (Job j : JOBS)
+            if (!j.finished && STATUS_DOWNLOADING.equals(j.status)) count++;
+        return count;
+    }
+
     public static synchronized boolean isRunning() {
         return running;
     }

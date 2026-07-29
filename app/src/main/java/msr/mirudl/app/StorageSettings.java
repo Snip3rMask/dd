@@ -34,6 +34,19 @@ public final class StorageSettings {
                 .edit().putInt(KEY_PARALLEL, value).apply();
     }
 
+    private static final String KEY_CONCURRENT_DOWNLOADS = "concurrent_downloads";
+
+    /** How many episodes may download at the same time. Default is 1 (one at a time). */
+    public static int getConcurrentDownloads(Context context) {
+        return context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+                .getInt(KEY_CONCURRENT_DOWNLOADS, 1);
+    }
+
+    public static void setConcurrentDownloads(Context context, int value) {
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+                .edit().putInt(KEY_CONCURRENT_DOWNLOADS, value).apply();
+    }
+
     public static String getPreferredQuality(Context context) {
         return context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
                 .getString(KEY_QUALITY, "1080p");

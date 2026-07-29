@@ -87,6 +87,8 @@ public class MainActivity extends BaseActivity {
     private TextView folderText;
     private SeekBar parallelBar;
     private TextView parallelValue;
+    private SeekBar concurrentBar;
+    private TextView concurrentValue;
     private Spinner qualitySpinner, langSpinner;
 
     // Common
@@ -1014,6 +1016,27 @@ public class MainActivity extends BaseActivity {
                     int val = Math.max(1, progress);
                     parallelValue.setText(String.valueOf(val));
                     StorageSettings.setParallelSegments(MainActivity.this, val);
+                }
+            }
+        });
+
+        // Concurrent Downloads (how many episodes download at once, side by side)
+        concurrentBar = findViewById(R.id.concurrent_seekbar);
+        concurrentValue = findViewById(R.id.concurrent_value);
+
+        int currentConcurrent = StorageSettings.getConcurrentDownloads(this);
+        concurrentBar.setProgress(Math.max(0, currentConcurrent - 1)); // seekbar is 0-based, value is 1-based
+        concurrentValue.setText(String.valueOf(currentConcurrent));
+
+        concurrentBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override public void onStartTrackingTouch(SeekBar bar) {}
+            @Override public void onStopTrackingTouch(SeekBar bar) {}
+            @Override
+            public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    int val = progress + 1;
+                    concurrentValue.setText(String.valueOf(val));
+                    StorageSettings.setConcurrentDownloads(MainActivity.this, val);
                 }
             }
         });
