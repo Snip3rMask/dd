@@ -348,6 +348,7 @@ public class MainActivity extends BaseActivity {
             // Fallback: open DetailActivity
             Intent intent = new Intent(this, DetailActivity.class);
             intent.putExtra("anime_id", anime.id);
+            intent.putExtra("anime_url", anime.url);
             intent.putExtra("anime_title", anime.title);
             intent.putExtra("anime_thumb", anime.thumbnail);
             startActivity(intent);
@@ -368,7 +369,7 @@ public class MainActivity extends BaseActivity {
         // Fetch anime title
         executor.execute(() -> {
             try {
-                String remoteTitle = client.getAnimeTitle(anime.id);
+                String remoteTitle = client.getAnimeTitle(anime.url != null ? anime.url : anime.id);
                 if (remoteTitle != null && !remoteTitle.isEmpty()) {
                     String finalTitle = remoteTitle;
                     handler.post(() -> title.setText(finalTitle));
@@ -380,6 +381,7 @@ public class MainActivity extends BaseActivity {
             dialog.dismiss();
             Intent intent = new Intent(this, DetailActivity.class);
             intent.putExtra("anime_id", anime.id);
+            intent.putExtra("anime_url", anime.url);
             intent.putExtra("anime_title", anime.title);
             intent.putExtra("anime_thumb", anime.thumbnail);
             startActivity(intent);

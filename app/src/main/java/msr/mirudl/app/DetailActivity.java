@@ -36,7 +36,7 @@ public class DetailActivity extends BaseActivity {
     private static final int GRID_THRESHOLD = 40; // switch to numeric grid beyond this many episodes
     private static final int GRID_SPAN = 5;
 
-    private String animeId, animeTitle, animeThumb;
+    private String animeId, animeTitle, animeThumb, animeUrl;
     private RecyclerView episodeList;
     private ProgressBar loadingBar;
     private TextView titleText, emptyText, episodeCount, detailMeta, detailDesc, detailStatus;
@@ -60,6 +60,7 @@ public class DetailActivity extends BaseActivity {
         animeId = getIntent().getStringExtra("anime_id");
         animeTitle = getIntent().getStringExtra("anime_title");
         animeThumb = getIntent().getStringExtra("anime_thumb");
+        animeUrl = getIntent().getStringExtra("anime_url");
 
         titleText = findViewById(R.id.detail_title);
         episodeList = findViewById(R.id.episode_list);
@@ -183,7 +184,7 @@ public class DetailActivity extends BaseActivity {
         executor.execute(() -> {
             try {
                 // Try to get more info from detail page
-                String title = client.getAnimeTitle(animeId);
+                String title = client.getAnimeTitle(animeUrl != null ? animeUrl : animeId);
                 if (title != null && !title.isEmpty()) {
                     String finalTitle = title;
                     handler.post(() -> {
@@ -193,7 +194,7 @@ public class DetailActivity extends BaseActivity {
                     });
                 }
                 // Fetch full anime details (description, meta, status)
-                JSONObject details = client.getAnimeDetails(animeId);
+                JSONObject details = client.getAnimeDetails(animeUrl != null ? animeUrl : animeId);
                 if (details != null) {
                     handler.post(() -> {
                         String desc = details.optString("description", "");
