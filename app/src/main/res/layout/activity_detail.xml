@@ -37,16 +37,17 @@
 
     </RelativeLayout>
 
+    <!-- Fixed-height scrolling header block: anime info + episode controls.
+         Kept OUT of the same scroller as the episode RecyclerView on purpose — see below. -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_height="wrap_content"
+        android:fillViewport="false">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingBottom="24dp">
+            android:orientation="vertical">
 
             <!-- Anime Info Card -->
             <LinearLayout
@@ -236,34 +237,45 @@
                 android:clickable="true"
                 android:focusable="true" />
 
-            <!-- Episode List -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/episode_list"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:clipToPadding="false"
-                android:paddingHorizontal="12dp" />
-
-            <ProgressBar
-                android:id="@+id/loading_bar"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_gravity="center"
-                android:indeterminateTint="@color/primary"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/empty_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:textColor="@color/text_tertiary"
-                android:textSize="15sp"
-                android:visibility="gone" />
-
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
+
+    <!-- Episode list gets the REMAINING screen space and scrolls on its own —
+         this keeps RecyclerView's item recycling intact even with 1000+ episodes.
+         (A RecyclerView placed inside a wrap_content NestedScrollView has to lay out
+         every item to measure itself, which is what was causing the freeze.) -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/episode_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingHorizontal="12dp"
+            android:paddingBottom="12dp" />
+
+        <ProgressBar
+            android:id="@+id/loading_bar"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center"
+            android:indeterminateTint="@color/primary"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/empty_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textColor="@color/text_tertiary"
+            android:textSize="15sp"
+            android:visibility="gone" />
+
+    </FrameLayout>
 
     <!-- Selection Action Bar (multi-episode download) -->
     <LinearLayout
