@@ -184,6 +184,7 @@ public class DetailActivity extends BaseActivity {
         // No external title/details fetching needed
         // Title comes from intent extra (search/anime card name)
     }
+    private void loadEpisodes() {
         loadingBar.setVisibility(View.VISIBLE);
         executor.execute(() -> {
             try {
