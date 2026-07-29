@@ -13,3 +13,7 @@ local.properties
 *.aab
 *.hprof
 *.md
+
+# Keystore
+app/release.keystore
+release.keystore
