@@ -331,17 +331,6 @@ public class MiruClient {
     
     // ============ ANIME DETAILS ============
 
-    public JSONObject getAnimeDetails(String animeId) throws Exception {
-        // Try API first
-        try {
-            String json = get(BASE + "/api/frontend/anime/" + animeId);
-            return new JSONObject(json);
-        } catch (Exception ignored) {}
-        // Fallback: return minimal info
-        JSONObject fallback = new JSONObject();
-        fallback.put("id", animeId);
-        return fallback;
-    }
 
     public List<EpisodeItem> getEpisodesWithSeasons(String animeId) throws Exception {
         return getEpisodes(animeId);
