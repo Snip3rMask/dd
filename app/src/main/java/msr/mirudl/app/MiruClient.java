@@ -338,10 +338,10 @@ public class MiruClient {
 
     public String getAnimeTitle(String animeId) throws Exception {
         try {
-                        String url;
-            if (animeId != null String url = animeId != null && animeId.startsWith("http") ? animeId : BASE + "/anime/" + animeId;String url = animeId != null && animeId.startsWith("http") ? animeId : BASE + "/anime/" + animeId; animeId.startsWith("http")) {
+            String url;
+            if (animeId != null && animeId.startsWith("http")) {
                 url = animeId;
-            } else if (animeId != null String url = animeId != null && animeId.startsWith("http") ? animeId : BASE + "/anime/" + animeId;String url = animeId != null && animeId.startsWith("http") ? animeId : BASE + "/anime/" + animeId; animeId.startsWith("/")) {
+            } else if (animeId != null && animeId.startsWith("/")) {
                 url = BASE + animeId;
             } else {
                 url = BASE + "/anime/" + animeId;
@@ -353,6 +353,13 @@ public class MiruClient {
                 int titleEnd = html.indexOf("\"", titleStart);
                 if (titleEnd > 0) return html.substring(titleStart, titleEnd);
             }
+        } catch (Exception ignored) {}
+        return null;
+    }
+    public JSONObject getAnimeDetails(String animeUrl) throws Exception {
+        JSONObject result = new JSONObject();
+        try {
+            // Fetch the anime page HTML using the full URL (e.g. https://anidb.app/anime/naruto-3686)
             String url;
             if (animeUrl != null && animeUrl.startsWith("http")) {
                 url = animeUrl;
@@ -360,16 +367,6 @@ public class MiruClient {
                 url = BASE + animeUrl;
             } else {
                 result.put("id", animeUrl != null ? animeUrl : "");
-                return result;
-            }
-    /** Scrape anime details from the HTML page using the full anime URL (with slug). */
-    public JSONObject getAnimeDetails(String animeUrl) throws Exception {
-        JSONObject result = new JSONObject();
-        try {
-            // Fetch the anime page HTML using the full URL (e.g. https://anidb.app/anime/naruto-3686)
-            String url = animeUrl;
-            if (url == null || url.isEmpty()) {
-                result.put("id", "");
                 return result;
             }
             String html = getHtml(url);
