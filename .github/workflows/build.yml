@@ -44,18 +44,23 @@ jobs:
             chmod +x $GITHUB_WORKSPACE/gradlew
           fi
 
-      - name: Build all APKs
-        run: ./gradlew assembleDebug
+      - name: Decode release keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/release.keystore
+
+      - name: Build debug & release APKs
+        run: |
+          ./gradlew assembleDebug assembleRelease
 
       - name: Collect APKs
         run: |
           mkdir -p artifacts
           find app/build/outputs -name "*.apk" | while read f; do
             base=$(basename "$f")
-            newname="dd-${base}"
+            # base looks like: app-arm64-v8a-debug.apk or app-arm64-v8a-release.apk
+            newname="dd-${base#app-}"
             cp "$f" "artifacts/${newname}"
           done
-
       - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:

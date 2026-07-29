@@ -17,3 +17,4 @@ local.properties
 # Keystore
 app/release.keystore
 release.keystore
+app/release.keystore.base64.txt
