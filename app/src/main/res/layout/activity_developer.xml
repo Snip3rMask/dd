@@ -194,6 +194,14 @@
                         android:textColor="@color/text_primary"
                         android:textSize="14sp" />
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/tg_channel_handle"
+                        android:textColor="@color/text_tertiary"
+                        android:textSize="12sp"
+                        android:layout_marginEnd="8dp" />
+
                     <ImageView
                         android:layout_width="18dp"
                         android:layout_height="18dp"
@@ -234,6 +242,14 @@
                         android:text="Telegram Group"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/tg_group_handle"
+                        android:textColor="@color/text_tertiary"
+                        android:textSize="12sp"
+                        android:layout_marginEnd="8dp" />
 
                     <ImageView
                         android:layout_width="18dp"

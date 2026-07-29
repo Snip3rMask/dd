@@ -232,7 +232,7 @@ public class MiruClient {
             // URL + ID from /anime/slug-id
             int hrefEnd = html.indexOf("\"", linkStart + 7);
             if (hrefEnd > linkStart) {
-                item.url = html.substring(linkStart, hrefEnd);
+                item.url = BASE + html.substring(linkStart, hrefEnd);
                 String slugPart = item.url.startsWith("/anime/") ? item.url.substring(7) : item.url;
                 String[] parts = slugPart.split("-");
                 item.id = parts.length > 0 ? parts[parts.length - 1] : null;
@@ -338,7 +338,14 @@ public class MiruClient {
 
     public String getAnimeTitle(String animeId) throws Exception {
         try {
-            String url = animeId != null && animeId.startsWith("http") ? animeId : BASE + "/anime/" + animeId;
+                        String url;
+            if (animeId != null String url = animeId != null && animeId.startsWith("http") ? animeId : BASE + "/anime/" + animeId;String url = animeId != null && animeId.startsWith("http") ? animeId : BASE + "/anime/" + animeId; animeId.startsWith("http")) {
+                url = animeId;
+            } else if (animeId != null String url = animeId != null && animeId.startsWith("http") ? animeId : BASE + "/anime/" + animeId;String url = animeId != null && animeId.startsWith("http") ? animeId : BASE + "/anime/" + animeId; animeId.startsWith("/")) {
+                url = BASE + animeId;
+            } else {
+                url = BASE + "/anime/" + animeId;
+            }
             String html = getHtml(url);
             int titleStart = html.indexOf("property=\"og:title\" content=\"");
             if (titleStart >= 0) {
@@ -346,10 +353,15 @@ public class MiruClient {
                 int titleEnd = html.indexOf("\"", titleStart);
                 if (titleEnd > 0) return html.substring(titleStart, titleEnd);
             }
-        } catch (Exception ignored) {}
-        return null;
-    }
-
+            String url;
+            if (animeUrl != null && animeUrl.startsWith("http")) {
+                url = animeUrl;
+            } else if (animeUrl != null && animeUrl.startsWith("/")) {
+                url = BASE + animeUrl;
+            } else {
+                result.put("id", animeUrl != null ? animeUrl : "");
+                return result;
+            }
     /** Scrape anime details from the HTML page using the full anime URL (with slug). */
     public JSONObject getAnimeDetails(String animeUrl) throws Exception {
         JSONObject result = new JSONObject();
