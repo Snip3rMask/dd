@@ -10,8 +10,8 @@ android {
         applicationId 'msr.mirudl.app'
         minSdk 21
         targetSdk 34
-        versionCode System.getenv("GITHUB_RUN_NUMBER")?.toInteger() ?: 1
-        versionName "1.0." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")
+        versionCode 9
+        versionName "0.0.9"
     }
 
     signingConfigs {
