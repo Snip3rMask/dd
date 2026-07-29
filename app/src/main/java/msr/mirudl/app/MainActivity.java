@@ -27,6 +27,7 @@ import androidx.core.splashscreen.SplashScreen;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -157,6 +158,16 @@ public class MainActivity extends BaseActivity {
 
         // Bottom nav
         bottomNav = findViewById(R.id.bottom_nav);
+
+        // Apply bottom inset padding to prevent overlap with system navigation bar
+        ViewCompat.setOnApplyWindowInsetsListener(bottomNav, (v, insets) -> {
+            int bottom = insets.getSystemWindowInsetBottom();
+            if (bottom > 0) {
+                v.setPadding(v.getPaddingLeft(), v.getPaddingTop(),
+                             v.getPaddingRight(), bottom);
+            }
+            return insets;
+        });
         bottomNav.setOnItemSelectedListener(item -> {
             if (suppressTabListener) return true;
             int id = item.getItemId();
