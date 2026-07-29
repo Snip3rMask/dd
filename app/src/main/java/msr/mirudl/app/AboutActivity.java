@@ -26,7 +26,7 @@ public class AboutActivity extends BaseActivity {
         findViewById(R.id.about_github).setOnClickListener(v -> {
             try {
                 startActivity(new Intent(Intent.ACTION_VIEW,
-                        Uri.parse("https://github.com/Snip3rMask/dd")));
+                        Uri.parse("https://github.com/msrofficial/MiruDL-App")));
             } catch (Exception ignored) {}
         });
     }
