@@ -251,14 +251,29 @@ public class DownloadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         textColLp.setMargins(dp(12), 0, 0, 0);
         topRow.addView(textCol, textColLp);
 
-        // Anime name
+        // Anime name row (with speed indicator in the top-right corner)
+        LinearLayout animeRow = new LinearLayout(ctx);
+        animeRow.setOrientation(LinearLayout.HORIZONTAL);
+        animeRow.setGravity(Gravity.CENTER_VERTICAL);
+        textCol.addView(animeRow, new LinearLayout.LayoutParams(-1, -2));
+
         TextView animeTv = new TextView(ctx);
         animeTv.setId(R.id.dl_anime);
         animeTv.setTextColor(ContextCompat.getColor(ctx, R.color.text_tertiary));
         animeTv.setTextSize(11);
         animeTv.setMaxLines(1);
         animeTv.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        textCol.addView(animeTv, new LinearLayout.LayoutParams(-1, -2));
+        animeRow.addView(animeTv, new LinearLayout.LayoutParams(0, -2, 1));
+
+        TextView speedTv = new TextView(ctx);
+        speedTv.setId(R.id.dl_speed);
+        speedTv.setTextColor(ContextCompat.getColor(ctx, R.color.primary));
+        speedTv.setTextSize(11);
+        speedTv.setTypeface(null, Typeface.BOLD);
+        speedTv.setMaxLines(1);
+        LinearLayout.LayoutParams speedLp = new LinearLayout.LayoutParams(-2, -2);
+        speedLp.setMargins(dp(8), 0, 0, 0);
+        animeRow.addView(speedTv, speedLp);
 
         // Episode title
         TextView epTv = new TextView(ctx);
