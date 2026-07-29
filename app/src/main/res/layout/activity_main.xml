@@ -407,11 +407,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
-                        android:max="32"
-                        android:progress="16"
-                        android:progressTint="@color/primary"
-                        android:thumbTint="@color/primary" />
-
+                        android:max="64"
+                        android:progress="16" />
                 </LinearLayout>
 
                 <!-- Concurrent Downloads -->

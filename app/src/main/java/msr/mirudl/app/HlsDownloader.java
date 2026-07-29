@@ -26,7 +26,7 @@ import okhttp3.Response;
 
 public final class HlsDownloader {
     public static final int DEFAULT_PARALLEL = 16;
-    private static final int MAX_PARALLEL = 32;
+    private static final int MAX_PARALLEL = 64;
     private static final int BUFFER_SIZE = 64 * 1024; // 64KB buffer
 
     private static final OkHttpClient CLIENT = new OkHttpClient.Builder()

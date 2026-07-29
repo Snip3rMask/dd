@@ -17,16 +17,31 @@ public class DeveloperActivity extends BaseActivity {
         findViewById(R.id.dev_github).setOnClickListener(v -> {
             try {
                 startActivity(new Intent(Intent.ACTION_VIEW,
-                        Uri.parse("https://github.com/Snip3rMask")));
+                        Uri.parse("https://github.com/msrofficial")));
             } catch (Exception ignored) {}
         });
 
-        // Email / Contact
-        findViewById(R.id.dev_email).setOnClickListener(v -> {
+        // Telegram Channel
+        findViewById(R.id.dev_telegram_channel).setOnClickListener(v -> {
             try {
-                Intent email = new Intent(Intent.ACTION_SENDTO);
-                email.setData(Uri.parse("mailto:msrofficial@email.com"));
-                startActivity(email);
+                startActivity(new Intent(Intent.ACTION_VIEW,
+                        Uri.parse("https://t.me/msrpatch")));
+            } catch (Exception ignored) {}
+        });
+
+        // Telegram Group
+        findViewById(R.id.dev_telegram_group).setOnClickListener(v -> {
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW,
+                        Uri.parse("https://t.me/msrpatchchat")));
+            } catch (Exception ignored) {}
+        });
+
+        // Reddit
+        findViewById(R.id.dev_reddit).setOnClickListener(v -> {
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW,
+                        Uri.parse("https://www.reddit.com/u/msrsakibur")));
             } catch (Exception ignored) {}
         });
     }

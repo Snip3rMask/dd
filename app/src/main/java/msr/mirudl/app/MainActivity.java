@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
+import android.graphics.PorterDuff;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -25,6 +26,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.splashscreen.SplashScreen;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -985,16 +987,47 @@ public class MainActivity extends BaseActivity {
             Toast.makeText(this, "Saved to Downloads/" + fileName, Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(this, "Could not save file: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
     }
-
-
     private String speedLabel(int parallel) {
         if (parallel <= 4) return "Slow";
         if (parallel <= 8) return "Normal";
         if (parallel <= 16) return "Fast";
-        return "Very Fast";
+        if (parallel <= 32) return "Very Fast";
+        return "Extreme";
     }
+
+    private void updateParallelTint(int val) {
+        int color;
+        if (val > 32) {
+            color = ContextCompat.getColor(this, R.color.error);
+        } else {
+            color = ContextCompat.getColor(this, R.color.primary);
+        }
+        parallelBar.getProgressDrawable().setColorFilter(color, PorterDuff.Mode.SRC_IN);
+        parallelBar.getThumb().setColorFilter(color, PorterDuff.Mode.SRC_IN);
+        parallelValue.setTextColor(color);
+    }
+
+    private void showParallelWarning(int val) {
+        new AlertDialog.Builder(this)
+                .setTitle("High Speed Warning")
+                .setMessage("Setting parallel segments to " + val + " may cause:\n\n"
+                        + "\u2022 Rate limiting from the server\n"
+                        + "\u2022 Increased data usage\n"
+                        + "\u2022 Higher battery consumption\n"
+                        + "\u2022 Possible download failures on slow connections\n\n"
+                        + "Use only if you have a stable, high-speed internet connection.")
+                .setPositiveButton("Use Anyway", null)
+                .setNegativeButton("Reduce", (d, w) -> {
+                    int safe = 32;
+                    parallelBar.setProgress(safe);
+                    parallelValue.setText(String.valueOf(safe));
+                    updateParallelTint(safe);
+                    StorageSettings.setParallelSegments(MainActivity.this, safe);
+                })
+                .show();
+    }
+
 
     private void initSettingsTab() {
         folderText = findViewById(R.id.folder_path);
@@ -1006,15 +1039,21 @@ public class MainActivity extends BaseActivity {
         int currentParallel = StorageSettings.getParallelSegments(this);
         parallelBar.setProgress(currentParallel);
         parallelValue.setText(String.valueOf(currentParallel));
-
+        updateParallelTint(currentParallel);
         parallelBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onStartTrackingTouch(SeekBar bar) {}
-            @Override public void onStopTrackingTouch(SeekBar bar) {}
+            @Override public void onStopTrackingTouch(SeekBar bar) {
+                int val = Math.max(1, bar.getProgress());
+                if (val > 32) {
+                    showParallelWarning(val);
+                }
+            }
             @Override
             public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
                 if (fromUser) {
                     int val = Math.max(1, progress);
                     parallelValue.setText(String.valueOf(val));
+                    updateParallelTint(val);
                     StorageSettings.setParallelSegments(MainActivity.this, val);
                 }
             }

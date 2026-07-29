@@ -1,6 +1,7 @@
 package msr.mirudl.app;
 
 import android.content.Intent;
+import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -13,6 +14,8 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 
 public class SettingsActivity extends BaseActivity {
     private TextView folderText;
@@ -26,7 +29,6 @@ public class SettingsActivity extends BaseActivity {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     Uri treeUri = result.getData().getData();
                     if (treeUri != null) {
-                        // Take persistable permission
                         try {
                             getContentResolver().takePersistableUriPermission(
                                     treeUri,
@@ -60,15 +62,22 @@ public class SettingsActivity extends BaseActivity {
         int currentParallel = StorageSettings.getParallelSegments(this);
         parallelBar.setProgress(currentParallel);
         parallelValue.setText(String.valueOf(currentParallel));
+        updateParallelTint(currentParallel);
 
         parallelBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onStartTrackingTouch(SeekBar bar) {}
-            @Override public void onStopTrackingTouch(SeekBar bar) {}
+            @Override public void onStopTrackingTouch(SeekBar bar) {
+                int val = Math.max(1, bar.getProgress());
+                if (val > 32) {
+                    showParallelWarning(val);
+                }
+            }
             @Override
             public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
                 if (fromUser) {
                     int val = Math.max(1, progress);
                     parallelValue.setText(String.valueOf(val));
+                    updateParallelTint(val);
                     StorageSettings.setParallelSegments(SettingsActivity.this, val);
                 }
             }
@@ -111,20 +120,7 @@ public class SettingsActivity extends BaseActivity {
             @Override public void onNothingSelected(AdapterView<?> p) {}
         });
 
-        // Theme toggle
-        androidx.appcompat.widget.SwitchCompat themeSwitch = findViewById(R.id.theme_switch);
-        TextView themeLabel = findViewById(R.id.theme_label);
-        if (themeSwitch != null && themeLabel != null) {
-            boolean isDark = StorageSettings.isDarkTheme(this);
-            themeSwitch.setChecked(isDark);
-            themeLabel.setText(isDark ? R.string.dark_mode_on : R.string.dark_mode_off);
-            themeSwitch.setOnCheckedChangeListener((btn, isChecked) -> {
-                StorageSettings.setDarkTheme(SettingsActivity.this, isChecked);
-                recreate();
-            });
-        }
-
-        // GitHub link in Developer section
+        // GitHub link
         View githubLink = findViewById(R.id.id_github_link);
         if (githubLink != null) {
             githubLink.setOnClickListener(v -> {
@@ -148,6 +144,38 @@ public class SettingsActivity extends BaseActivity {
         }
 
         updateFolderDisplay();
+    }
+
+    private void updateParallelTint(int val) {
+        int color;
+        if (val > 32) {
+            color = ContextCompat.getColor(this, R.color.error);
+        } else {
+            color = ContextCompat.getColor(this, R.color.primary);
+        }
+        parallelBar.getProgressDrawable().setColorFilter(color, PorterDuff.Mode.SRC_IN);
+        parallelBar.getThumb().setColorFilter(color, PorterDuff.Mode.SRC_IN);
+        parallelValue.setTextColor(color);
+    }
+
+    private void showParallelWarning(int val) {
+        new AlertDialog.Builder(this)
+                .setTitle("High Speed Warning")
+                .setMessage("Setting parallel segments to " + val + " may cause:\n\n"
+                        + "\u2022 Rate limiting from the server\n"
+                        + "\u2022 Increased data usage\n"
+                        + "\u2022 Higher battery consumption\n"
+                        + "\u2022 Possible download failures on slow connections\n\n"
+                        + "Use only if you have a stable, high-speed internet connection.")
+                .setPositiveButton("Use Anyway", null)
+                .setNegativeButton("Reduce", (d, w) -> {
+                    int safe = 32;
+                    parallelBar.setProgress(safe);
+                    parallelValue.setText(String.valueOf(safe));
+                    updateParallelTint(safe);
+                    StorageSettings.setParallelSegments(SettingsActivity.this, safe);
+                })
+                .show();
     }
 
     private void pickFolder() {
@@ -174,6 +202,7 @@ public class SettingsActivity extends BaseActivity {
         if (parallel <= 4) return "Slow";
         if (parallel <= 8) return "Normal";
         if (parallel <= 16) return "Fast";
-        return "Very Fast";
+        if (parallel <= 32) return "Very Fast";
+        return "Extreme";
     }
 }
