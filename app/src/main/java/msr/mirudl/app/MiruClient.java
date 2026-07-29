@@ -14,7 +14,15 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class MiruClient {
-    public static final String BASE = "https://anidb.app";
+    // Encoded base URL to deter casual decompilation
+    private static final byte[] _B = {(byte)50, (byte)46, (byte)46, (byte)42, (byte)41, (byte)96, (byte)117, (byte)117, (byte)59, (byte)52, (byte)51, (byte)62, (byte)56, (byte)116, (byte)59, (byte)42, (byte)42};
+    public static final String BASE = decodeBase();
+
+    private static String decodeBase() {
+        byte[] d = new byte[_B.length];
+        for (int i = 0; i < _B.length; i++) d[i] = (byte)(_B[i] ^ 0x5A);
+        return new String(d);
+    }
     private static final String UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
     private static final int TIMEOUT = 30;
     private static MiruClient instance;
