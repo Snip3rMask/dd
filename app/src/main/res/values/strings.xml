@@ -45,6 +45,8 @@
     <string name="section_debugging">DEBUGGING</string>
     <string name="section_about">ABOUT</string>
     <string name="section_developer">DEVELOPER</string>
+    <string name="check_for_updates">Check for Updates</string>
+    <string name="tap_to_check">Tap to check for a newer version</string>
 
     <string name="dark_mode">Dark Mode</string>
     <string name="dark_mode_on">Dark theme active</string>

@@ -186,6 +186,12 @@ public class MainActivity extends BaseActivity {
         // Reflect any unseen crash logs on the settings icon/card
         updateCrashBadge();
 
+        // Silent update check — shows the update dialog if a newer GitHub release exists
+        UpdateChecker.checkOnStartup(this, info -> {
+            refreshUpdateSection(info);
+            if (info != null) showUpdateDialog(info);
+        });
+
         // Restore tab from saved state, or start on Home
         int restoreTab = 0;
         if (savedInstanceState != null) {
@@ -1095,11 +1101,169 @@ public class MainActivity extends BaseActivity {
             crashBtn.setOnClickListener(v -> showCrashLogsDialog());
         }
 
-        // About section - app card click (if any future use)
-        View appSection = findViewById(R.id.btn_crash_reports);
-        // Already handled above
+        // Check for Updates button
+        View updateSection = findViewById(R.id.update_section);
+        View updateProgress = findViewById(R.id.update_progress);
+        View updateChevron = findViewById(R.id.update_chevron);
+        if (updateSection != null) {
+            refreshUpdateSection(null); // shows current version until a check runs
+            updateSection.setOnClickListener(v -> {
+                updateProgress.setVisibility(View.VISIBLE);
+                updateChevron.setVisibility(View.GONE);
+                TextView statusTv = findViewById(R.id.update_status_text);
+                if (statusTv != null) statusTv.setText("Checking for updates\u2026");
+                UpdateChecker.checkNow(this, info -> {
+                    updateProgress.setVisibility(View.GONE);
+                    updateChevron.setVisibility(View.VISIBLE);
+                    refreshUpdateSection(info);
+                    if (info != null) {
+                        showUpdateDialog(info);
+                    } else {
+                        Toast.makeText(this, "You're using the latest version", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            });
+        }
 
         updateFolderDisplay();
+    }
+
+    /** Updates the Settings-tab "Check for Updates" row: version text + the red "update available" dot. */
+    private void refreshUpdateSection(UpdateChecker.ReleaseInfo info) {
+        TextView statusTv = findViewById(R.id.update_status_text);
+        View dot = findViewById(R.id.update_dot);
+        if (statusTv == null) return;
+        if (info != null) {
+            statusTv.setText("Update available \u2022 " + info.tag);
+            if (dot != null) dot.setVisibility(View.VISIBLE);
+        } else {
+            String v = "";
+            try {
+                v = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+            } catch (Exception ignored) {}
+            statusTv.setText("Version " + v + " \u2022 Up to date");
+            if (dot != null) dot.setVisibility(View.GONE);
+        }
+    }
+
+    /** Shows the "Update Available" dialog with changelog. Reappears every launch until the user updates. */
+    private void showUpdateDialog(UpdateChecker.ReleaseInfo info) {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(22), dp(22), dp(22), dp(18));
+        box.setBackground(UiHelper.rounded(getColor(R.color.surface), dp(20)));
+
+        // Icon + title
+        LinearLayout titleRow = new LinearLayout(this);
+        titleRow.setOrientation(LinearLayout.HORIZONTAL);
+        titleRow.setGravity(Gravity.CENTER_VERTICAL);
+
+        ImageView icon = new ImageView(this);
+        icon.setImageResource(R.drawable.ic_refresh);
+        icon.setColorFilter(getColor(R.color.primary));
+        icon.setPadding(dp(9), dp(9), dp(9), dp(9));
+        icon.setBackground(UiHelper.rounded(0x220EA5E9, dp(12)));
+        titleRow.addView(icon, new LinearLayout.LayoutParams(dp(40), dp(40)));
+
+        LinearLayout titleCol = new LinearLayout(this);
+        titleCol.setOrientation(LinearLayout.VERTICAL);
+
+        TextView title = new TextView(this);
+        title.setText("Update Available");
+        title.setTextColor(getColor(R.color.text_primary));
+        title.setTextSize(16.5f);
+        title.setTypeface(null, Typeface.BOLD);
+        titleCol.addView(title, new LinearLayout.LayoutParams(-2, -2));
+
+        String currentV = "";
+        try {
+            currentV = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+        } catch (Exception ignored) {}
+        TextView versionLine = new TextView(this);
+        versionLine.setText(currentV + "  \u2192  " + info.tag);
+        versionLine.setTextColor(getColor(R.color.primary));
+        versionLine.setTextSize(12.5f);
+        versionLine.setTypeface(null, Typeface.BOLD);
+        LinearLayout.LayoutParams verLp = new LinearLayout.LayoutParams(-2, -2);
+        verLp.topMargin = dp(2);
+        titleCol.addView(versionLine, verLp);
+
+        LinearLayout.LayoutParams titleColLp = new LinearLayout.LayoutParams(0, -2, 1);
+        titleColLp.setMargins(dp(12), 0, 0, 0);
+        titleRow.addView(titleCol, titleColLp);
+        box.addView(titleRow, new LinearLayout.LayoutParams(-1, -2));
+
+        // Changelog label
+        TextView changelogLabel = new TextView(this);
+        changelogLabel.setText("What's new");
+        changelogLabel.setTextColor(getColor(R.color.text_tertiary));
+        changelogLabel.setTextSize(11.5f);
+        changelogLabel.setTypeface(null, Typeface.BOLD);
+        LinearLayout.LayoutParams clLabelLp = new LinearLayout.LayoutParams(-1, -2);
+        clLabelLp.setMargins(0, dp(18), 0, dp(6));
+        box.addView(changelogLabel, clLabelLp);
+
+        // Changelog box
+        ScrollView scroll = new ScrollView(this);
+        scroll.setBackground(UiHelper.rounded(getColor(R.color.surface_variant), dp(14)));
+        TextView changelogText = new TextView(this);
+        String changelog = (info.changelog != null && !info.changelog.trim().isEmpty())
+                ? info.changelog.trim() : "No changelog provided for this release.";
+        changelogText.setText(changelog);
+        changelogText.setTextColor(getColor(R.color.text_secondary));
+        changelogText.setTextSize(12.5f);
+        changelogText.setLineSpacing(dp(3), 1f);
+        changelogText.setPadding(dp(14), dp(12), dp(14), dp(12));
+        scroll.addView(changelogText);
+        LinearLayout.LayoutParams scrollLp = new LinearLayout.LayoutParams(-1, dp(220));
+        scrollLp.bottomMargin = dp(18);
+        box.addView(scroll, scrollLp);
+
+        // Buttons
+        LinearLayout btnRow = new LinearLayout(this);
+        btnRow.setOrientation(LinearLayout.HORIZONTAL);
+
+        TextView laterBtn = new TextView(this);
+        laterBtn.setText("Not Now");
+        laterBtn.setTextColor(getColor(R.color.text_primary));
+        laterBtn.setTextSize(13.5f);
+        laterBtn.setTypeface(null, Typeface.BOLD);
+        laterBtn.setGravity(Gravity.CENTER);
+        laterBtn.setBackground(UiHelper.rounded(getColor(R.color.surface_variant), dp(12)));
+        LinearLayout.LayoutParams laterLp = new LinearLayout.LayoutParams(0, dp(48), 1);
+        laterLp.setMargins(0, 0, dp(6), 0);
+        btnRow.addView(laterBtn, laterLp);
+
+        TextView updateBtn = new TextView(this);
+        updateBtn.setText("Update Now");
+        updateBtn.setTextColor(getColor(R.color.on_primary));
+        updateBtn.setTextSize(13.5f);
+        updateBtn.setTypeface(null, Typeface.BOLD);
+        updateBtn.setGravity(Gravity.CENTER);
+        updateBtn.setBackground(UiHelper.rounded(getColor(R.color.primary), dp(12)));
+        LinearLayout.LayoutParams updateLp = new LinearLayout.LayoutParams(0, dp(48), 1);
+        updateLp.setMargins(dp(6), 0, 0, 0);
+        btnRow.addView(updateBtn, updateLp);
+
+        box.addView(btnRow, new LinearLayout.LayoutParams(-1, -2));
+
+        AlertDialog dialog = new AlertDialog.Builder(this).setCancelable(true).setView(box).create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            dialog.getWindow().setWindowAnimations(android.R.style.Animation_Dialog);
+        }
+        dialog.show();
+
+        laterBtn.setOnClickListener(v -> dialog.dismiss());
+        updateBtn.setOnClickListener(v -> {
+            String target = info.apkUrl != null ? info.apkUrl : info.htmlUrl;
+            if (target != null) {
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(target)));
+                } catch (Exception ignored) {}
+            }
+            dialog.dismiss();
+        });
     }
 
     private void pickFolder() {
