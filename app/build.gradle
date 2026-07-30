@@ -23,9 +23,9 @@ android {
         }
         release {
             storeFile file("release.keystore")
-            storePassword System.getenv("STORE_PASSWORD") ?: "MiruDL@2026"
+            storePassword System.getenv("STORE_PASSWORD") ?: "android"
             keyAlias System.getenv("KEY_ALIAS") ?: "msr"
-            keyPassword System.getenv("KEY_PASSWORD") ?: "MiruDL@2026"
+            keyPassword System.getenv("KEY_PASSWORD") ?: "android"
         }
     }
 
