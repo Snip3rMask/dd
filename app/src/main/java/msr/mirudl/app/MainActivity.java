@@ -1150,6 +1150,19 @@ public class MainActivity extends BaseActivity {
             });
         }
 
+        // Reflect the real installed version here instead of the static
+        // "Version 1.0.1" placeholder from strings.xml, so this row never
+        // goes stale when the app's versionName changes.
+        TextView settingsVersionTv = findViewById(R.id.settings_app_version);
+        if (settingsVersionTv != null) {
+            try {
+                String v = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+                settingsVersionTv.setText("Version " + v);
+            } catch (Exception ignored) {
+                // Keep the strings.xml fallback text if lookup fails for any reason.
+            }
+        }
+
         // Developer info section -> open Developer page
         View devInfo = findViewById(R.id.dev_info_section);
         if (devInfo != null) {

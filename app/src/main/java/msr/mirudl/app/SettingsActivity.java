@@ -52,6 +52,16 @@ public class SettingsActivity extends BaseActivity {
 
         findViewById(R.id.btn_back).setOnClickListener(v -> finish());
 
+        TextView versionTv = findViewById(R.id.settings_app_version);
+        if (versionTv != null) {
+            try {
+                String v = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+                versionTv.setText("Version " + v);
+            } catch (Exception ignored) {
+                // Keep the strings.xml fallback text if lookup fails for any reason.
+            }
+        }
+
         folderText = findViewById(R.id.folder_path);
         findViewById(R.id.btn_select_folder).setOnClickListener(v -> pickFolder());
 
