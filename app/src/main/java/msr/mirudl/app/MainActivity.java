@@ -28,6 +28,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -159,15 +160,23 @@ public class MainActivity extends BaseActivity {
         // Bottom nav
         bottomNav = findViewById(R.id.bottom_nav);
 
-        // Apply bottom inset padding to prevent overlap with system navigation bar
-        ViewCompat.setOnApplyWindowInsetsListener(bottomNav, (v, insets) -> {
-            int bottom = insets.getSystemWindowInsetBottom();
-            if (bottom > 0) {
-                v.setPadding(v.getPaddingLeft(), v.getPaddingTop(),
-                             v.getPaddingRight(), bottom);
-            }
+        // Apply bottom inset padding to prevent overlap with the system navigation bar
+        // (3-button nav OR gesture nav — height differs per device/OS version).
+        // Deliberately does NOT react to the keyboard (IME) anymore: with
+        // windowSoftInputMode="adjustNothing" the window never resizes/pans when the
+        // keyboard opens, so bottomNav stays physically pinned to the bottom of the
+        // screen — the keyboard just overlays on top of it instead of pushing it up.
+        View rootLayout = findViewById(R.id.root_layout);
+        ViewCompat.setOnApplyWindowInsetsListener(rootLayout, (v, insets) -> {
+            int navBarBottom = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
+            bottomNav.setPadding(bottomNav.getPaddingLeft(), bottomNav.getPaddingTop(),
+                                 bottomNav.getPaddingRight(), navBarBottom);
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), navBarBottom);
             return insets;
         });
+        // Force an initial dispatch so the listener runs once immediately (some Android 15
+        // OEM builds don't auto-dispatch insets the first time a listener is attached).
+        ViewCompat.requestApplyInsets(rootLayout);
         bottomNav.setOnItemSelectedListener(item -> {
             if (suppressTabListener) return true;
             int id = item.getItemId();
