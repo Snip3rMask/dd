@@ -171,7 +171,9 @@ public class MainActivity extends BaseActivity {
             int navBarBottom = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
             bottomNav.setPadding(bottomNav.getPaddingLeft(), bottomNav.getPaddingTop(),
                                  bottomNav.getPaddingRight(), navBarBottom);
-            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), navBarBottom);
+            // NOTE: root_layout itself must NOT also get this bottom padding —
+            // bottomNav is a child of root_layout, so padding both doubles the
+            // gap above the system nav bar/buttons.
             return insets;
         });
         // Force an initial dispatch so the listener runs once immediately (some Android 15
